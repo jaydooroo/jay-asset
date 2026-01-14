@@ -1,0 +1,24 @@
+.calculator-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.calculator-card .MuiCardContent-root {
+  background: white;
+  border-radius: 8px;
+  margin: 16px;
+}
+
+.allocation-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+}
+
+.allocation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.MuiMenuItem-root .MuiBox-root {
+  width: 100%;
+}
