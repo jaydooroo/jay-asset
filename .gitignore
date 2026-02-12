@@ -31,7 +31,22 @@ __pycache__/
 backend/venv/
 backend/database/*.db
 backend/database/*.sqlite3
+backend/database/*.db-*
+backend/database/*.sqlite3-*
 backend/lambda_pkg/*
 backend/deployment.zip
 
+# local/dev artifacts
+tmpclaude-*
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+*.tsbuildinfo
 
