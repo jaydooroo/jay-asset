@@ -21,45 +21,12 @@ import {
 import CalculateIcon from '@mui/icons-material/Calculate';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ApiService from '../services/api';
-import './AssetCalculator.css';
+import StrategyAboutPanel from './StrategyAboutPanel';
+import { staticStrategies } from '../data/staticStrategies';
+import { strategyEducation } from '../data/strategyEducation';
 
 // Static strategies (original ones)
-const staticStrategies = {
-  conservative: {
-    name: 'Conservative',
-    description: 'Low risk, stable returns',
-    type: 'static',
-    allocation: {
-      'Bonds': 60,
-      'Stocks': 20,
-      'Cash': 15,
-      'Real Estate': 5,
-    }
-  },
-  balanced: {
-    name: 'Balanced',
-    description: 'Moderate risk, balanced growth',
-    type: 'static',
-    allocation: {
-      'Stocks': 40,
-      'Bonds': 30,
-      'Real Estate': 15,
-      'Commodities': 10,
-      'Cash': 5,
-    }
-  },
-  aggressive: {
-    name: 'Aggressive',
-    description: 'High risk, maximum growth potential',
-    type: 'static',
-    allocation: {
-      'Stocks': 70,
-      'Real Estate': 15,
-      'Commodities': 10,
-      'Bonds': 5,
-    }
-  },
-};
+// moved to src/data/staticStrategies.js
 
 const StrategySelector = () => {
   const [strategies, setStrategies] = useState(staticStrategies);
@@ -69,6 +36,7 @@ const StrategySelector = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [paramValues, setParamValues] = useState({});
 
   useEffect(() => {
     // Check if backend is available and load dynamic strategies
@@ -127,11 +95,61 @@ const StrategySelector = () => {
           type: 'static'
         });
       } else {
+        const parameters = {};
+        if (strategy.parameters && strategy.parameters.length > 0) {
+          // Build a "parameters" payload to send to the backend.
+          // - `strategy.parameters` describes which inputs the strategy supports (from the backend).
+          // - `paramValues` holds what the user typed into the UI form (mostly strings).
+          // This loop converts/cleans user input into the correct data types:
+          //   - numbers -> Number
+          //   - etfs text -> ["TICKER1", "TICKER2", ...]
+          //   - other text -> string (only if non-empty)
+          strategy.parameters.forEach((param) => {
+            // Raw user input for this parameter (often a string).
+            const rawValue = paramValues[param.name];
+            if (param.type === 'number') {
+              // Convert number inputs from string -> Number, and only include valid values.
+              const numericValue = parseFloat(rawValue);
+              if (!Number.isNaN(numericValue)) {
+                parameters[param.name] = numericValue;
+              }
+              return;
+            }
+            if (param.name === 'etfs') {
+              // The ETF list is entered as a comma-separated string (e.g. "SPY, qqq, IWM").
+              // Convert it into an array of uppercase tickers and remove empty entries.
+              const etfList = (rawValue || '')
+                .split(',')
+                .map((value) => value.trim().toUpperCase())
+                .filter(Boolean);
+              if (etfList.length > 0) {
+                parameters[param.name] = etfList;
+              }
+              return;
+            }
+            if (param.name.endsWith('_assets')) {
+              // Strategy asset lists are entered as comma-separated tickers in the UI.
+              // Example: "SPY,EFA,EEM,AGG" -> ["SPY","EFA","EEM","AGG"]
+              const tickers = (rawValue || '')
+                .split(',')
+                .map((value) => value.trim().toUpperCase())
+                .filter(Boolean);
+              if (tickers.length > 0) {
+                parameters[param.name] = tickers;
+              }
+              return;
+            }
+            // Default behavior for text-like params: only include if user provided a non-empty value.
+            if (rawValue !== undefined && rawValue !== null && rawValue !== '') {
+              parameters[param.name] = rawValue;
+            }
+          });
+        }
         // Call backend for dynamic calculation
         const result = await ApiService.calculateAllocation(
           selectedStrategy,
           totalAmount,
-          {}
+          parameters
         );
 
         // Transform backend result to match UI format
@@ -140,6 +158,15 @@ const StrategySelector = () => {
           amount: amount.toFixed(2),
           percentage: ((amount / totalAmount) * 100).toFixed(2)
         }));
+
+        if (result.momentum_scores) {
+          const scores = result.momentum_scores;
+          breakdown.sort((a, b) => {
+            const scoreA = scores[a.asset] ?? Number.NEGATIVE_INFINITY;
+            const scoreB = scores[b.asset] ?? Number.NEGATIVE_INFINITY;
+            return scoreB - scoreA;
+          });
+        }
 
         setResults({
           strategy: result.strategy,
@@ -152,6 +179,9 @@ const StrategySelector = () => {
             defensive_ratio: result.defensive_ratio,
             offensive_ratio: result.offensive_ratio,
             momentum_scores: result.momentum_scores,
+            avg_momentum: result.avg_momentum,
+            best_etf: result.best_etf,
+            worst_etf: result.worst_etf,
           }
         });
       }
@@ -167,7 +197,32 @@ const StrategySelector = () => {
     setAmount('');
     setResults(null);
     setError(null);
+    setParamValues({});
   };
+
+  const handleStrategyChange = (event) => {
+    const nextStrategy = event.target.value;
+    setSelectedStrategy(nextStrategy);
+    setResults(null);
+    setError(null);
+
+    const selected = strategies[nextStrategy];
+    if (selected && selected.parameters && selected.parameters.length > 0) {
+      const defaults = {};
+      selected.parameters.forEach((param) => {
+        defaults[param.name] = param.default ?? '';
+      });
+      setParamValues(defaults);
+    } else {
+      setParamValues({});
+    }
+  };
+
+  const handleParamChange = (name, value) => {
+    setParamValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const selectedEducation = selectedStrategy ? strategyEducation[selectedStrategy] : null;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -207,7 +262,7 @@ const StrategySelector = () => {
                   labelId="strategy-label"
                   value={selectedStrategy}
                   label="Investment Strategy"
-                  onChange={(e) => setSelectedStrategy(e.target.value)}
+                  onChange={handleStrategyChange}
                 >
                   {Object.entries(strategies).map(([key, strategy]) => (
                     <MenuItem key={key} value={key}>
@@ -243,6 +298,44 @@ const StrategySelector = () => {
                 }}
               />
             </Grid>
+
+            {selectedStrategy && selectedEducation && (
+              <Grid item xs={12}>
+                <StrategyAboutPanel education={selectedEducation} />
+              </Grid>
+            )}
+
+            {selectedStrategy &&
+              strategies[selectedStrategy] &&
+              strategies[selectedStrategy].parameters &&
+              strategies[selectedStrategy].parameters.length > 0 && (
+                <Grid item xs={12}>
+                  <Paper elevation={1} sx={{ p: 2 }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                      Strategy Parameters
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {strategies[selectedStrategy].parameters.map((param) => (
+                        <Grid item xs={12} md={6} key={param.name}>
+                          <TextField
+                            fullWidth
+                            label={param.label}
+                            type={param.type === 'number' ? 'number' : 'text'}
+                            value={paramValues[param.name] ?? ''}
+                            onChange={(e) => handleParamChange(param.name, e.target.value)}
+                            helperText={param.description}
+                            inputProps={{
+                              min: param.min,
+                              max: param.max,
+                              step: param.type === 'number' ? 1 : undefined,
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
+                </Grid>
+              )}
 
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
@@ -307,6 +400,18 @@ const StrategySelector = () => {
                       <Box sx={{ mt: 1 }}>
                         <Chip label={`Defensive: ${(results.metadata.defensive_ratio * 100).toFixed(1)}%`} sx={{ mr: 1 }} />
                         <Chip label={`Offensive: ${(results.metadata.offensive_ratio * 100).toFixed(1)}%`} />
+                        {typeof results.metadata.avg_momentum === 'number' && (
+                          <Chip
+                            label={`Avg Momentum: ${(results.metadata.avg_momentum * 100).toFixed(2)}%`}
+                            sx={{ ml: 1 }}
+                          />
+                        )}
+                        {results.metadata.best_etf && (
+                          <Chip label={`Best: ${results.metadata.best_etf}`} sx={{ ml: 1 }} />
+                        )}
+                        {results.metadata.worst_etf && (
+                          <Chip label={`Weakest: ${results.metadata.worst_etf}`} sx={{ ml: 1 }} />
+                        )}
                       </Box>
                     </Grid>
                   )}

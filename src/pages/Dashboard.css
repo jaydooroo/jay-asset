@@ -1,0 +1,17 @@
+.dashboard-root {
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 0;
+}
+
+.dashboard-grid-wrap {
+  overflow-x: auto;
+}
+
+.dashboard-grid {
+  min-width: 1140px;
+  display: grid;
+  grid-template-columns: 300px 1fr 420px;
+  gap: 16px;
+  align-items: stretch;
+}

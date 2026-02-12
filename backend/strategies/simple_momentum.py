@@ -1,6 +1,6 @@
+from datetime import datetime
 from typing import Dict
 from .base_strategy import BaseStrategy
-import random
 
 class SimpleMomentumStrategy(BaseStrategy):
     """Simple Momentum Strategy (Demo without external API)"""
@@ -11,13 +11,15 @@ class SimpleMomentumStrategy(BaseStrategy):
             description="Momentum-based strategy with simulated data for testing"
         )
 
-    def calculate_allocation(self, total_money: float, **kwargs) -> Dict:
+    def calculate_plan(self, **kwargs) -> Dict:
         """
-        Calculate allocation based on simulated momentum
+        Calculate allocation weights based on simulated momentum.
 
         This is a demo strategy that doesn't require external APIs.
         In production, you would replace this with real market data.
         """
+        # This dictionary maps asset ticker -> momentum score.
+        # Higher momentum means we prefer that asset.
         # Simulated momentum scores
         assets = {
             'SPY': 0.12,   # S&P 500 - positive momentum
@@ -28,38 +30,34 @@ class SimpleMomentumStrategy(BaseStrategy):
             'IEF': 0.04,   # Bonds - defensive, slight positive
         }
 
-        # Sort by momentum
+        # Sort by momentum (highest first).
         sorted_assets = sorted(assets.items(), key=lambda x: x[1], reverse=True)
 
-        # Take top 3 with positive momentum
+        # Take top 3 assets that have positive momentum.
+        # If momentum <= 0, we avoid allocating to it.
         top_assets = [(asset, momentum) for asset, momentum in sorted_assets if momentum > 0][:3]
 
         if not top_assets:
             # All negative momentum - allocate to defensive (IEF)
-            return {
-                'strategy': self.name,
-                'allocation': {'IEF': total_money},
-                'total_amount': total_money,
-                'note': 'All assets showing negative momentum - 100% defensive allocation'
-            }
+            weights = {'IEF': 1.0}
+            selected_assets = ['IEF']
+            note = 'All assets showing negative momentum - 100% defensive allocation'
+        else:
+            # Equal weight allocation across the selected assets.
+            per = 1.0 / len(top_assets)
+            weights = {asset: per for asset, _ in top_assets}
+            selected_assets = [asset for asset, _ in top_assets]
+            note = 'This is a demo with simulated data. Connect to real data sources for production use.'
 
-        # Equal weight allocation to top assets
-        allocation_per_asset = total_money / len(top_assets)
-
-        allocation = {}
-        for asset, momentum in top_assets:
-            allocation[asset] = round(allocation_per_asset, 2)
-
-        # Create momentum scores for display
+        # Create momentum scores for display (rounded for nicer UI output).
         momentum_scores = {asset: round(momentum, 4) for asset, momentum in assets.items()}
 
         return {
-            'strategy': self.name,
-            'allocation': allocation,
-            'total_amount': total_money,
+            'date': datetime.today().strftime("%Y-%m-%d"),
+            'allocation_weights': weights,
             'momentum_scores': momentum_scores,
-            'selected_assets': [asset for asset, _ in top_assets],
-            'note': 'This is a demo with simulated data. Connect to real data sources for production use.'
+            'selected_assets': selected_assets,
+            'note': note,
         }
 
     def get_parameters(self):

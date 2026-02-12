@@ -10,10 +10,13 @@ import {
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 
+// Top navigation bar shown across the app.
+// Uses react-router's <Link> so navigation stays inside the SPA (no page reload).
 const Navbar = () => {
   return (
     <AppBar
-      position="sticky"
+      // Use "static" so the navbar scrolls with the page (not floating/sticky).
+      position="static"
       sx={{
         backgroundColor: "var(--bg-primary)",
         color: "var(--text-primary)",
@@ -55,6 +58,7 @@ const Navbar = () => {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {/* Note: /about and /contact routes are not currently defined in src/App.js */}
             <Button
               component={Link}
               to="/about"

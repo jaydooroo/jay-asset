@@ -4,6 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// React entrypoint:
+// - Creates the root React render target (the <div id="root"> in public/index.html)
+// - Renders the main <App /> component
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

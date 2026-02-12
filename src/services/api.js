@@ -1,5 +1,9 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+// Set `REACT_APP_API_BASE_URL` to point the frontend at Lambda / API Gateway.
+// Example: https://xxxxx.lambda-url.us-east-1.on.aws/api
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
+// Small wrapper around the backend Flask API.
+// The UI calls these methods instead of using fetch() directly.
 class ApiService {
   /**
    * Get list of all available strategies
@@ -33,6 +37,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
         },
+        // Backend expects: strategy_id, total_money, and strategy-specific parameters
         body: JSON.stringify({
           strategy_id: strategyId,
           total_money: totalMoney,
@@ -86,4 +91,5 @@ class ApiService {
   }
 }
 
-export default new ApiService();
+const apiService = new ApiService();
+export default apiService;

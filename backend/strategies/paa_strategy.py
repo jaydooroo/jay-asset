@@ -1,8 +1,8 @@
-import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict
 from .base_strategy import BaseStrategy
+from market_data import download_close_prices
 
 class PAAStrategy(BaseStrategy):
     """Protective Asset Allocation Strategy"""
@@ -10,7 +10,10 @@ class PAAStrategy(BaseStrategy):
     def __init__(self):
         super().__init__(
             name="PAA (Protective Asset Allocation)",
-            description="Momentum-based strategy with defensive asset protection"
+            description=(
+                "Ranks ETFs by 12-month momentum and allocates to the top performers. "
+                "If momentum is weak, shifts a portion into defensive bonds (IEF)."
+            )
         )
         self.default_etfs = ['SPY', 'QQQ', 'IWM', 'VGK', 'EWJ', 'EEM', 'VNQ', 'GLD', 'DBC', 'HYG', 'LQD']
         self.fallback_asset = 'IEF'
@@ -28,18 +31,17 @@ class PAAStrategy(BaseStrategy):
         }
         return lookup.get(num_negative_momentum, 1.0)
 
-    def calculate_allocation(self, total_money: float, **kwargs) -> Dict:
+    def calculate_plan(self, **kwargs) -> Dict:
         """
-        Calculate PAA allocation
+        Calculate PAA allocation weights (independent of investment amount).
 
         Args:
-            total_money: Total amount to allocate
             etfs: List of ETF tickers (optional)
             top_n: Number of top ETFs to select (default: 6)
             lookback_months: Lookback period in months (default: 12)
 
         Returns:
-            Dictionary with allocation details
+            Dictionary with allocation plan details (weights + metadata)
         """
         etfs = kwargs.get('etfs', self.default_etfs)
         top_n = kwargs.get('top_n', 6)
@@ -50,86 +52,7 @@ class PAAStrategy(BaseStrategy):
         start_date = end_date - timedelta(days=lookback_months * 30 + 30)
 
         try:
-            # Try a single batch download first (faster, fewer Yahoo requests)
-            import time
-            failed_tickers = []
-            batch_data = yf.download(
-                all_tickers,
-                start=start_date,
-                end=end_date,
-                progress=False,
-                threads=False,
-                ignore_tz=True
-            )
-
-            if batch_data is not None and not batch_data.empty:
-                if isinstance(batch_data.columns, pd.MultiIndex):
-                    if 'Close' in batch_data.columns.levels[0]:
-                        price_data = batch_data['Close']
-                    else:
-                        price_data = pd.DataFrame()
-                else:
-                    if 'Close' in batch_data.columns:
-                        price_data = batch_data[['Close']]
-                        price_data.columns = [all_tickers[0]]
-                    else:
-                        price_data = batch_data
-            else:
-                price_data = pd.DataFrame()
-
-            # If batch fails or is empty, fall back to per-ticker with retries
-            if price_data.empty:
-                series_by_ticker = {}
-                max_retries = 3
-
-                for ticker in all_tickers:
-                    data = None
-                    for attempt in range(max_retries):
-                        try:
-                            data = yf.download(
-                                ticker,
-                                start=start_date,
-                                end=end_date,
-                                progress=False,
-                                threads=False,
-                                ignore_tz=True
-                            )
-
-                            if data is not None and not data.empty:
-                                break
-
-                            if attempt < max_retries - 1:
-                                time.sleep(2)
-                        except Exception:
-                            if attempt < max_retries - 1:
-                                time.sleep(2)
-
-                    if data is None or data.empty:
-                        failed_tickers.append(ticker)
-                        continue
-
-                    if isinstance(data.columns, pd.MultiIndex):
-                        if 'Close' in data.columns.levels[0]:
-                            series = data['Close'].rename(ticker)
-                        else:
-                            failed_tickers.append(ticker)
-                            continue
-                    else:
-                        if 'Close' in data.columns:
-                            series = data['Close'].rename(ticker)
-                        else:
-                            series = data.squeeze()
-                            series.name = ticker
-
-                    series_by_ticker[ticker] = series
-
-                if not series_by_ticker:
-                    return {
-                        'error': 'Failed to download price data. Yahoo Finance may be temporarily unavailable.',
-                        'failed_tickers': failed_tickers
-                    }
-
-                price_data = pd.concat(series_by_ticker.values(), axis=1)
+            price_data, failed_tickers = download_close_prices(all_tickers, start_date, end_date)
 
             # Drop columns with all NaN values
             price_data = price_data.dropna(axis=1, how='all')
@@ -166,35 +89,38 @@ class PAAStrategy(BaseStrategy):
         num_negative = (momentum[available_etfs] < 0).sum()
         ief_ratio = self.calculate_ief_ratio(num_negative)
         offensive_ratio = 1 - ief_ratio
+        avg_momentum = round(float(selected.mean()), 4) if not selected.empty else 0.0
+        best_etf = selected.idxmax() if not selected.empty else None
+        worst_etf = selected.idxmin() if not selected.empty else None
 
-        # Calculate allocations
-        ief_amount = round(total_money * ief_ratio, 2)
-        remaining_amount = total_money - ief_amount
-        offensive_allocation = round(remaining_amount / top_n, 2) if top_n != 0 else 0
+        # Calculate weights
+        ief_weight = float(ief_ratio)
+        offensive_weight_each = (1.0 - ief_weight) / float(top_n) if top_n != 0 else 0.0
 
-        allocation = {}
+        weights: Dict[str, float] = {}
         momentum_data = {}
 
         # Allocate to offensive assets
         for etf in selected.index:
             if momentum[etf] >= 0:
-                allocation[etf] = offensive_allocation
+                weights[etf] = float(offensive_weight_each)
             momentum_data[etf] = round(float(momentum[etf]), 4)
 
-        # Add defensive allocation
-        if ief_amount > 0:
-            allocation[self.fallback_asset] = ief_amount
+        # Add defensive allocation weight
+        if ief_weight > 0:
+            weights[self.fallback_asset] = float(ief_weight)
 
         result = {
-            'strategy': self.name,
             'date': datetime.today().strftime("%Y-%m-%d"),
-            'total_amount': total_money,
-            'allocation': allocation,
+            'allocation_weights': weights,
             'defensive_ratio': round(ief_ratio, 4),
             'offensive_ratio': round(offensive_ratio, 4),
             'num_negative_momentum': int(num_negative),
             'momentum_scores': momentum_data,
-            'selected_etfs': list(selected.index)
+            'selected_etfs': list(selected.index),
+            'avg_momentum': avg_momentum,
+            'best_etf': best_etf,
+            'worst_etf': worst_etf
         }
         if 'failed_tickers' in locals() and failed_tickers:
             result['missing_tickers'] = failed_tickers

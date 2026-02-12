@@ -111,7 +111,7 @@ The PAA strategy will:
 
 ### Static Strategy (Frontend Only)
 
-Edit `src/components/StrategySelector.js` and add to `staticStrategies`:
+Edit `src/data/staticStrategies.js` and add a new strategy:
 
 ```javascript
 myStrategy: {

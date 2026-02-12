@@ -17,39 +17,13 @@ import {
 } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import './AssetCalculator.css';
+import { staticStrategies } from '../data/staticStrategies';
 
+// Legacy/standalone calculator (static strategies only).
+// The newer component is StrategySelector.js which supports backend-driven strategies.
+// Reuse the shared static strategy definitions, then add extra legacy-only ones below.
 const strategies = {
-  conservative: {
-    name: 'Conservative',
-    description: 'Low risk, stable returns',
-    allocation: {
-      'Bonds': 60,
-      'Stocks': 20,
-      'Cash': 15,
-      'Real Estate': 5,
-    }
-  },
-  balanced: {
-    name: 'Balanced',
-    description: 'Moderate risk, balanced growth',
-    allocation: {
-      'Stocks': 40,
-      'Bonds': 30,
-      'Real Estate': 15,
-      'Commodities': 10,
-      'Cash': 5,
-    }
-  },
-  aggressive: {
-    name: 'Aggressive',
-    description: 'High risk, maximum growth potential',
-    allocation: {
-      'Stocks': 70,
-      'Real Estate': 15,
-      'Commodities': 10,
-      'Bonds': 5,
-    }
-  },
+  ...staticStrategies,
   growth: {
     name: 'Growth',
     description: 'Focus on capital appreciation',
@@ -78,6 +52,7 @@ const AssetCalculator = () => {
   const [results, setResults] = useState(null);
 
   const handleCalculate = () => {
+    // Basic input validation
     if (!selectedStrategy || !amount || amount <= 0) {
       alert('Please select a strategy and enter a valid amount');
       return;
@@ -86,6 +61,7 @@ const AssetCalculator = () => {
     const strategy = strategies[selectedStrategy];
     const totalAmount = parseFloat(amount);
 
+    // Convert percentage allocations into dollar amounts
     const calculations = Object.entries(strategy.allocation).map(([asset, percentage]) => ({
       asset,
       percentage,
