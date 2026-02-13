@@ -1,70 +1,229 @@
-# Getting Started with Create React App
+# Jay Asset Management
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern web application for calculating asset allocation strategies with live market data.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Multiple Investment Strategies**
+  - Static strategies (Conservative, Balanced, Aggressive)
+  - Dynamic strategies with live market data (PAA - Protective Asset Allocation)
 
-### `npm start`
+- **PAA Strategy**
+  - Momentum-based allocation using real-time ETF data
+  - Automatic defensive positioning based on market conditions
+  - Historical data analysis with configurable lookback periods
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **User-Friendly Interface**
+  - Modern Material-UI design
+  - Real-time calculations
+  - Visual breakdown of asset allocations
+  - Responsive design for all devices
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Architecture
 
-### `npm test`
+```
+jay-asset/
+├── src/                    # React frontend
+│   ├── components/         # React components
+│   ├── pages/             # Page components
+│   └── services/          # API service layer
+│
+└── backend/               # Python Flask backend
+    ├── strategies/        # Investment strategy implementations
+    ├── database/         # SQLite database
+    └── app.py           # Flask application
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js (v16 or higher)
+- Python 3.8+
+- npm or yarn
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Frontend Setup
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Install dependencies:
+```bash
+npm install
+```
 
-### `npm run eject`
+2. Start the development server:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The frontend will run on `http://localhost:3000`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Backend Setup
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Navigate to backend directory:
+```bash
+cd backend
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. Create virtual environment:
+```bash
+python -m venv venv
+```
 
-## Learn More
+3. Activate virtual environment:
+- Windows: `venv\Scripts\activate`
+- Mac/Linux: `source venv/bin/activate`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+5. Run the backend:
+```bash
+python app.py
+```
 
-### Code Splitting
+The backend will run on `http://localhost:5000`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Usage
 
-### Analyzing the Bundle Size
+### Using Static Strategies
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. Select a strategy (Conservative, Balanced, or Aggressive)
+2. Enter your investment amount
+3. Click "Calculate"
+4. View your asset allocation breakdown
 
-### Making a Progressive Web App
+### Using PAA Strategy (Requires Backend)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+1. Start the backend server
+2. Select "PAA (Protective Asset Allocation)" strategy
+3. Enter your investment amount
+4. Click "Calculate"
+5. View real-time allocation based on current market momentum
 
-### Advanced Configuration
+The PAA strategy will:
+- Download latest ETF price data
+- Calculate 12-month momentum for each ETF
+- Select top-performing ETFs
+- Automatically allocate to defensive assets (IEF) based on market conditions
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Adding New Strategies
 
-### Deployment
+### Static Strategy (Frontend Only)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Edit `src/data/staticStrategies.js` and add a new strategy:
 
-### `npm run build` fails to minify
+```javascript
+myStrategy: {
+  name: 'My Strategy',
+  description: 'Description here',
+  type: 'static',
+  allocation: {
+    'Asset1': 50,
+    'Asset2': 30,
+    'Asset3': 20,
+  }
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Dynamic Strategy (Backend)
+
+1. Create `backend/strategies/my_strategy.py`:
+
+```python
+from .base_strategy import BaseStrategy
+
+class MyStrategy(BaseStrategy):
+    def __init__(self):
+        super().__init__(
+            name="My Strategy",
+            description="Description here"
+        )
+
+    def calculate_allocation(self, total_money, **kwargs):
+        # Your logic here
+        return {
+            'strategy': self.name,
+            'allocation': {'SPY': 5000, 'BND': 5000},
+            'total_amount': total_money
+        }
+
+    def get_parameters(self):
+        return []
+```
+
+2. Register in `backend/strategies/__init__.py`:
+
+```python
+from .my_strategy import MyStrategy
+
+STRATEGIES = {
+    'paa': PAAStrategy(),
+    'my_strategy': MyStrategy(),
+}
+```
+
+## Technologies Used
+
+### Frontend
+- React 19
+- Material-UI
+- React Router
+
+### Backend
+- Flask
+- yfinance (Yahoo Finance API)
+- pandas
+- SQLite
+
+## API Endpoints
+
+- `GET /api/strategies` - List all strategies
+- `POST /api/calculate` - Calculate allocation
+- `GET /api/history` - Get calculation history
+- `GET /api/health` - Health check
+
+## Database
+
+The application stores calculation history in SQLite database at `backend/database/allocations.db`.
+
+## Development
+
+### Frontend
+- Start development server: `npm start`
+- Build for production: `npm run build`
+- Run tests: `npm test`
+
+### Backend
+- Run in debug mode: Backend runs in debug mode by default
+- Database is created automatically on first run
+
+## Troubleshooting
+
+### Frontend won't start
+- Make sure Node.js is installed: `node --version`
+- Delete `node_modules` and `package-lock.json`, then run `npm install` again
+
+### Backend errors
+- Make sure Python 3.8+ is installed: `python --version`
+- Activate virtual environment before running
+- Check if port 5000 is available
+
+### "Backend not available" message
+- Make sure backend server is running on port 5000
+- Check CORS settings in `backend/app.py`
+- Verify API_BASE_URL in `src/services/api.js`
+
+## Future Enhancements
+
+- [ ] Add more investment strategies
+- [ ] Historical performance charts
+- [ ] Portfolio rebalancing recommendations
+- [ ] Export allocations to CSV/PDF
+- [ ] User authentication and saved portfolios
+- [ ] Real-time portfolio tracking
+- [ ] Tax-loss harvesting suggestions
+
+## Author
+
+Jehyeon Lee
