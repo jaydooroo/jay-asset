@@ -51,6 +51,20 @@ Get calculation history
 ### GET `/api/health`
 Health check endpoint
 
+## Optional DynamoDB Cache (Lambda)
+
+The `/api/calculate` endpoint can cache strategy plans (allocation weights) in DynamoDB to avoid repeated
+market-data downloads for identical inputs.
+
+Environment variables:
+- `CACHE_ENABLED`: `true|false` (defaults to enabled in Lambda, disabled elsewhere)
+- `CACHE_TABLE`: DynamoDB table name (default: `jay-asset-cache`)
+- `CACHE_TTL_SECONDS`: TTL in seconds (default: `7200` = 2 hours)
+
+Table requirements:
+- Partition key: `cache_key` (String)
+- TTL attribute (optional but recommended): `expires_at` (Number)
+
 ## Adding New Strategies
 
 1. Create a new file in `strategies/` (e.g., `my_strategy.py`)
