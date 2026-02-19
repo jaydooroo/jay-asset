@@ -18,6 +18,7 @@ import ApiService from '../services/api';
 import StrategyAboutPanel from '../components/StrategyAboutPanel';
 import AllocationDonutChart from '../components/dashboard/AllocationDonutChart';
 import MomentumBarChart from '../components/dashboard/MomentumBarChart';
+import PerformanceSummary from '../components/dashboard/PerformanceSummary';
 import ResultsTable from '../components/dashboard/ResultsTable';
 import StrategySidebar from '../components/dashboard/StrategySidebar';
 import { staticStrategies } from '../data/staticStrategies';
@@ -37,6 +38,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [performanceByStrategy, setPerformanceByStrategy] = useState({});
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -71,14 +75,45 @@ const Dashboard = () => {
   }, [dynamicStrategies, t]);
 
   const selectedStrategy = selectedStrategyId ? strategies[selectedStrategyId] : null;
+  const selectedPerformance = selectedStrategyId ? performanceByStrategy[selectedStrategyId] : null;
   const selectedEducation = selectedStrategyId
     ? (language === 'ko' ? strategyEducationKo[selectedStrategyId] : null) || strategyEducation[selectedStrategyId]
     : null;
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadPerformance = async () => {
+      if (!backendAvailable || !selectedStrategyId) return;
+      const strategy = strategies[selectedStrategyId];
+      if (!strategy || strategy.type !== 'dynamic') return;
+      if (selectedPerformance) return;
+
+      setPerformanceLoading(true);
+      setPerformanceError(null);
+      try {
+        const payload = await ApiService.getPerformance(selectedStrategyId);
+        if (!alive) return;
+        setPerformanceByStrategy((prev) => ({ ...prev, [selectedStrategyId]: payload }));
+      } catch (err) {
+        if (!alive) return;
+        setPerformanceError(err.message || t('dashboard.performanceUnavailable'));
+      } finally {
+        if (alive) setPerformanceLoading(false);
+      }
+    };
+
+    loadPerformance();
+    return () => {
+      alive = false;
+    };
+  }, [backendAvailable, selectedStrategyId, selectedPerformance, strategies, t]);
 
   const handleSelectStrategy = (id) => {
     setSelectedStrategyId(id);
     setResults(null);
     setError(null);
+    setPerformanceError(null);
 
     const next = strategies[id];
     if (next && next.parameters && next.parameters.length > 0) {
@@ -102,6 +137,21 @@ const Dashboard = () => {
     setError(null);
     setParamValues({});
     setSelectedStrategyId('');
+    setPerformanceError(null);
+  };
+
+  const handleRefreshPerformance = async () => {
+    if (!selectedStrategyId || !selectedStrategy || selectedStrategy.type !== 'dynamic') return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      const payload = await ApiService.getPerformance(selectedStrategyId, true);
+      setPerformanceByStrategy((prev) => ({ ...prev, [selectedStrategyId]: payload }));
+    } catch (err) {
+      setPerformanceError(err.message || t('dashboard.performanceUnavailable'));
+    } finally {
+      setPerformanceLoading(false);
+    }
   };
 
   const handleCalculate = async () => {
@@ -296,6 +346,15 @@ const Dashboard = () => {
               <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                 {t('dashboard.results')}
               </Typography>
+
+              {selectedStrategy && selectedStrategy.type === 'dynamic' && (
+                <PerformanceSummary
+                  payload={selectedPerformance}
+                  loading={performanceLoading}
+                  error={performanceError}
+                  onRefresh={handleRefreshPerformance}
+                />
+              )}
 
               {!results && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

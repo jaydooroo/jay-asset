@@ -59,6 +59,32 @@ class ApiService {
   }
 
   /**
+   * Get cached monthly walk-forward performance metrics for a strategy
+   * @param {string} strategyId - Strategy identifier
+   * @param {boolean} refresh - Force recompute before reading cache
+   */
+  async getPerformance(strategyId, refresh = false) {
+    try {
+      const qs = new URLSearchParams({
+        strategy_id: String(strategyId || ''),
+      });
+      if (refresh) qs.set('refresh', 'true');
+
+      const response = await fetch(`${API_BASE_URL}/performance?${qs.toString()}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch performance');
+      }
+
+      return data.performance;
+    } catch (error) {
+      console.error('Error fetching performance:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get calculation history
    */
   async getHistory() {

@@ -12,6 +12,7 @@
 /build
 /build2
 /build[0-9]*/
+/build_tmp
 /build_tmp_*
 
 # misc
