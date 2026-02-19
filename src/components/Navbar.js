@@ -6,13 +6,18 @@ import {
   Button,
   Box,
   Container,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useLanguage } from "../i18n/LanguageContext";
 
 // Top navigation bar shown across the app.
 // Uses react-router's <Link> so navigation stays inside the SPA (no page reload).
 const Navbar = () => {
+  const { language, setLanguage, t } = useLanguage();
+
   return (
     <AppBar
       // Use "static" so the navbar scrolls with the page (not floating/sticky).
@@ -58,6 +63,22 @@ const Navbar = () => {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <ToggleButtonGroup
+              size="small"
+              value={language}
+              exclusive
+              onChange={(_, value) => {
+                if (value) setLanguage(value);
+              }}
+              aria-label={t("navbar.language")}
+            >
+              <ToggleButton value="en" aria-label={t("navbar.english")}>
+                EN
+              </ToggleButton>
+              <ToggleButton value="ko" aria-label={t("navbar.korean")}>
+                KO
+              </ToggleButton>
+            </ToggleButtonGroup>
             {/* Note: /about and /contact routes are not currently defined in src/App.js */}
             <Button
               component={Link}
@@ -70,7 +91,7 @@ const Navbar = () => {
                 },
               }}
             >
-              About
+              {t("navbar.about")}
             </Button>
             <Button
               component={Link}
@@ -83,7 +104,7 @@ const Navbar = () => {
                 },
               }}
             >
-              Contact
+              {t("navbar.contact")}
             </Button>
           </Box>
         </Toolbar>

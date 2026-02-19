@@ -51,6 +51,13 @@ Get calculation history
 ### GET `/api/health`
 Health check endpoint
 
+### GET `/api/performance?strategy_id=paa`
+Get monthly walk-forward performance metrics (precomputed/cached).
+
+- Query params:
+  - `strategy_id` (required)
+  - `refresh` (optional: `true|1`) to force immediate recompute
+
 ## Optional DynamoDB Cache (Lambda)
 
 The `/api/calculate` endpoint can cache strategy plans (allocation weights) in DynamoDB to avoid repeated
@@ -64,6 +71,37 @@ Environment variables:
 Table requirements:
 - Partition key: `cache_key` (String)
 - TTL attribute (optional but recommended): `expires_at` (Number)
+
+## Monthly Strategy Performance Snapshot (Lambda + EventBridge)
+
+The backend supports scheduled precomputation of basic metrics so users can view expected
+performance without heavy per-request backtesting.
+
+Metrics produced (walk-forward monthly backtest):
+- cumulative return
+- CAGR
+- max drawdown
+- annualized volatility
+
+Environment variables:
+- `PERFORMANCE_ENABLED`: `true|false` (defaults to enabled in Lambda, disabled elsewhere)
+- `PERFORMANCE_TABLE`: DynamoDB table name (default: `jay-asset-performance`)
+- `PERFORMANCE_LOOKBACK_DAYS`: minimum trading-day lookback per rebalance step (default: `252` for ~1Y)
+- `PERFORMANCE_BACKTEST_MONTHS`: monthly periods to simulate (default: `12`)
+- `PERFORMANCE_TTL_SECONDS`: item TTL (default: `5184000` = 60 days)
+
+Table requirements:
+- Partition key: `metric_key` (String)
+- TTL attribute (optional but recommended): `expires_at` (Number)
+
+Lambda schedule:
+- `backend/lambda_handler.py` handles EventBridge schedule events (`aws.events` / `aws.scheduler`)
+- Scheduled invocation runs monthly refresh for all registered strategy specs.
+
+Adding strategies:
+- Add a new strategy spec under `backend/performance/specs/`
+- Register it in `backend/performance/specs/__init__.py`
+- The shared engine in `backend/performance/backtest.py` handles monthly walk-forward simulation.
 
 ## Adding New Strategies
 

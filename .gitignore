@@ -11,6 +11,7 @@
 # production
 /build
 /build2
+/build[0-9]*/
 /build_tmp_*
 
 # misc

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const DEFAULT_COLORS = [
   '#4F46E5',
@@ -19,6 +20,7 @@ const clamp01 = (value) => Math.max(0, Math.min(1, value));
 // Simple SVG donut chart with a small legend.
 // data: [{ label: 'SPY', value: 25.0 }, ...] where value is percentage (0..100).
 const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAULT_COLORS }) => {
+  const { t } = useLanguage();
   if (!data || data.length === 0) return null;
 
   const radius = (size - thickness) / 2;
@@ -85,7 +87,7 @@ const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAU
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            Allocation
+            {t('chart.allocation')}
           </Typography>
           <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
             100%
@@ -114,7 +116,7 @@ const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAU
         ))}
         {normalized.length > 8 && (
           <Typography variant="caption" color="text.secondary">
-            +{normalized.length - 8} more
+            {t('chart.more', { count: normalized.length - 8 })}
           </Typography>
         )}
       </Box>
@@ -123,4 +125,3 @@ const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAU
 };
 
 export default AllocationDonutChart;
-

@@ -150,3 +150,68 @@ export const strategyEducation = {
     ],
   },
 };
+
+export const strategyEducationKo = {
+  paa: {
+    title: 'PAA (보호 자산 배분)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '모멘텀 순위로 강한 ETF를 선택하고, 모멘텀이 약해지면 방어형 채권 ETF(IEF) 비중을 높입니다.',
+          '현재 가격을 12개월 이동평균(252거래일)과 비교합니다.',
+        ],
+      },
+      {
+        heading: '배분 방식',
+        bullets: [
+          '각 ETF의 모멘텀 계산: (현재가 / 12개월 이동평균) - 1',
+          '모멘텀이 음수인 ETF 수를 계산하고, 음수가 많을수록 IEF 방어 비중을 높입니다.',
+          '모멘텀 상위 N개 ETF를 선택하고(모멘텀 0 이상), 공격형 비중을 동일 가중으로 배분합니다.',
+        ],
+      },
+      {
+        heading: '사용자가 바꿀 수 있는 입력값',
+        bullets: [
+          'ETF 티커: 쉼표 구분 목록 (예: SPY, QQQ, IWM)',
+          'Top N ETFs: 공격형 버킷에 포함할 상위 ETF 개수',
+          'Lookback Months: 이동평균 계산에 사용하는 과거 데이터 기간',
+        ],
+      },
+      {
+        heading: '데이터 요구사항',
+        bullets: [
+          '실시간 시세 데이터(Yahoo Finance, Stooq)를 사용합니다. 네트워크 차단이나 호출 제한이 있으면 계산이 실패할 수 있습니다.',
+        ],
+      },
+    ],
+  },
+  vaa: {
+    title: 'VAA 공격형 (경계 자산 배분)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '1/3/6/12개월 수익률의 가중 모멘텀 점수를 계산합니다.',
+          '공격 자산 중 음수 모멘텀이 있으면 방어 자산 최상위 1개에 100% 배분합니다.',
+        ],
+      },
+      {
+        heading: '자산군',
+        bullets: [
+          '공격 자산: SPY, EFA, EEM, AGG',
+          '방어 자산: LQD, IEF, SHY',
+        ],
+      },
+      {
+        heading: '데이터 요구사항',
+        bullets: [
+          '12개월 수익률 계산이 가능할 만큼 충분한 과거 데이터가 필요합니다.',
+          '실시간 시세 데이터(Yahoo Finance, Stooq)를 사용합니다.',
+        ],
+      },
+    ],
+  },
+};

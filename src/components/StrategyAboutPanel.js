@@ -1,17 +1,19 @@
 import React from 'react';
 import { Box, Chip, Paper, Typography } from '@mui/material';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StrategyAboutPanel = ({ education }) => {
+  const { t } = useLanguage();
   if (!education) return null;
 
   return (
     <Paper elevation={1} sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          About: {education.title}
+          {t('strategyAbout.about', { title: education.title })}
         </Typography>
         {education.rebalanceFrequency && (
-          <Chip label={`Rebalance: ${education.rebalanceFrequency}`} size="small" />
+          <Chip label={t('strategyAbout.rebalance', { value: education.rebalanceFrequency })} size="small" />
         )}
       </Box>
 

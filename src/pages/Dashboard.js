@@ -21,12 +21,14 @@ import MomentumBarChart from '../components/dashboard/MomentumBarChart';
 import ResultsTable from '../components/dashboard/ResultsTable';
 import StrategySidebar from '../components/dashboard/StrategySidebar';
 import { staticStrategies } from '../data/staticStrategies';
-import { strategyEducation } from '../data/strategyEducation';
+import { strategyEducation, strategyEducationKo } from '../data/strategyEducation';
 import { buildStrategyParameters, getStrategyConfigPanel } from '../strategies/registry';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [strategies, setStrategies] = useState(staticStrategies);
+  const { language, t } = useLanguage();
+  const [dynamicStrategies, setDynamicStrategies] = useState({});
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [amount, setAmount] = useState('');
   const [paramValues, setParamValues] = useState({});
@@ -43,11 +45,7 @@ const Dashboard = () => {
         setBackendAvailable(true);
 
         const dynamic = await ApiService.getStrategies();
-        const merged = { ...staticStrategies };
-        Object.keys(dynamic).forEach((key) => {
-          merged[key] = { ...dynamic[key], type: 'dynamic' };
-        });
-        setStrategies(merged);
+        setDynamicStrategies(dynamic);
       } catch {
         setBackendAvailable(false);
       }
@@ -55,8 +53,27 @@ const Dashboard = () => {
     load();
   }, []);
 
+  const strategies = useMemo(() => {
+    const merged = { ...staticStrategies };
+    Object.keys(dynamicStrategies).forEach((key) => {
+      const raw = dynamicStrategies[key];
+      const localizedName = t(`strategies.${key}.name`);
+      const localizedDescription = t(`strategies.${key}.description`);
+      merged[key] = {
+        ...raw,
+        name: localizedName === `strategies.${key}.name` ? raw.name : localizedName,
+        description:
+          localizedDescription === `strategies.${key}.description` ? raw.description : localizedDescription,
+        type: 'dynamic',
+      };
+    });
+    return merged;
+  }, [dynamicStrategies, t]);
+
   const selectedStrategy = selectedStrategyId ? strategies[selectedStrategyId] : null;
-  const selectedEducation = selectedStrategyId ? strategyEducation[selectedStrategyId] : null;
+  const selectedEducation = selectedStrategyId
+    ? (language === 'ko' ? strategyEducationKo[selectedStrategyId] : null) || strategyEducation[selectedStrategyId]
+    : null;
 
   const handleSelectStrategy = (id) => {
     setSelectedStrategyId(id);
@@ -89,7 +106,7 @@ const Dashboard = () => {
 
   const handleCalculate = async () => {
     if (!selectedStrategyId || !amount || Number(amount) <= 0) {
-      setError('Please select a strategy and enter a valid amount');
+      setError(t('dashboard.errorSelectAmount'));
       return;
     }
 
@@ -101,7 +118,7 @@ const Dashboard = () => {
       const strategy = strategies[selectedStrategyId];
 
       if (!strategy) {
-        setError('Please select a strategy');
+        setError(t('dashboard.errorSelectStrategy'));
         return;
       }
 
@@ -185,13 +202,13 @@ const Dashboard = () => {
             <TrendingUpIcon sx={{ fontSize: 34 }} />
             <Box sx={{ flex: 1 }}>
               <Typography variant="h5" sx={{ fontWeight: 900 }}>
-                Asset Allocation Dashboard
+                {t('dashboard.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Pick a strategy, tune parameters, and view allocation + momentum charts.
+                {t('dashboard.subtitle')}
               </Typography>
             </Box>
-            {backendAvailable && <Chip label="Backend Connected" color="success" size="small" />}
+            {backendAvailable && <Chip label={t('dashboard.backendConnected')} color="success" size="small" />}
           </Box>
         </Paper>
 
@@ -213,12 +230,12 @@ const Dashboard = () => {
             {/* Middle: Configure */}
             <Paper elevation={2} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                Configure
+                {t('dashboard.configure')}
               </Typography>
 
               {!selectedStrategy && (
                 <Typography variant="body2" color="text.secondary">
-                  Select a strategy from the left panel to get started.
+                  {t('dashboard.selectStrategyPrompt')}
                 </Typography>
               )}
 
@@ -233,7 +250,7 @@ const Dashboard = () => {
                     </Typography>
                     {selectedEducation?.rebalanceFrequency && (
                       <Box sx={{ mt: 1 }}>
-                        <Chip label={`Rebalance: ${selectedEducation.rebalanceFrequency}`} size="small" />
+                        <Chip label={t('dashboard.rebalance', { value: selectedEducation.rebalanceFrequency })} size="small" />
                       </Box>
                     )}
                   </Box>
@@ -244,11 +261,11 @@ const Dashboard = () => {
 
                   <TextField
                     fullWidth
-                    label="Investment Amount"
+                    label={t('dashboard.investmentAmount')}
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount in $"
+                    placeholder={t('dashboard.amountPlaceholder')}
                     InputProps={{
                       startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
                     }}
@@ -264,10 +281,10 @@ const Dashboard = () => {
                       onClick={handleCalculate}
                       disabled={loading}
                     >
-                      {loading ? 'Calculating...' : 'Calculate'}
+                      {loading ? t('dashboard.calculating') : t('dashboard.calculate')}
                     </Button>
                     <Button variant="outlined" onClick={handleReset} disabled={loading}>
-                      Reset
+                      {t('dashboard.reset')}
                     </Button>
                   </Box>
                 </>
@@ -277,12 +294,12 @@ const Dashboard = () => {
             {/* Right: Results */}
             <Paper elevation={2} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                Results
+                {t('dashboard.results')}
               </Typography>
 
               {!results && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Run a calculation to see allocation charts and a breakdown table.
+                  {t('dashboard.runPrompt')}
                 </Typography>
               )}
 
@@ -292,24 +309,24 @@ const Dashboard = () => {
                   <Box sx={{ flex: 1, overflow: 'auto', mt: 1, pr: 1 }}>
                     <Box>
                       <Typography variant="body2" color="text.secondary">
-                        Strategy
+                        {t('dashboard.strategy')}
                       </Typography>
                       <Typography variant="h6" sx={{ fontWeight: 900 }}>
                         {results.strategy}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Total: ${Number(results.totalAmount).toLocaleString()}
+                        {t('dashboard.total', { currency: '$', total: Number(results.totalAmount).toLocaleString() })}
                       </Typography>
                       {selectedEducation?.rebalanceFrequency && (
                         <Box sx={{ mt: 1 }}>
-                          <Chip label={`Rebalance: ${selectedEducation.rebalanceFrequency}`} size="small" />
+                          <Chip label={t('dashboard.rebalance', { value: selectedEducation.rebalanceFrequency })} size="small" />
                         </Box>
                       )}
                     </Box>
 
                     {results.metadata?.missing_tickers && results.metadata.missing_tickers.length > 0 && (
                       <Alert severity="warning" sx={{ mt: 1 }}>
-                        Missing tickers: {results.metadata.missing_tickers.join(', ')}
+                        {t('dashboard.missingTickers', { tickers: results.metadata.missing_tickers.join(', ') })}
                       </Alert>
                     )}
 
@@ -317,7 +334,7 @@ const Dashboard = () => {
 
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                        Allocation Chart
+                        {t('dashboard.allocationChart')}
                       </Typography>
                       <AllocationDonutChart data={donutData} />
                     </Box>
@@ -327,7 +344,7 @@ const Dashboard = () => {
                     {momentumScores && (
                       <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                          Momentum Chart
+                          {t('dashboard.momentumChart')}
                         </Typography>
                         <MomentumBarChart scores={momentumScores} />
                       </Box>
@@ -336,15 +353,15 @@ const Dashboard = () => {
                     {results.metadata && (
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
                         {typeof results.metadata.defensive_ratio === 'number' && (
-                          <Chip label={`Defensive ${(results.metadata.defensive_ratio * 100).toFixed(1)}%`} />
+                          <Chip label={t('dashboard.defensive', { value: (results.metadata.defensive_ratio * 100).toFixed(1) })} />
                         )}
                         {typeof results.metadata.offensive_ratio === 'number' && (
-                          <Chip label={`Offensive ${(results.metadata.offensive_ratio * 100).toFixed(1)}%`} />
+                          <Chip label={t('dashboard.offensive', { value: (results.metadata.offensive_ratio * 100).toFixed(1) })} />
                         )}
                         {typeof results.metadata.avg_momentum === 'number' && (
-                          <Chip label={`Avg ${(results.metadata.avg_momentum * 100).toFixed(2)}%`} />
+                          <Chip label={t('dashboard.avg', { value: (results.metadata.avg_momentum * 100).toFixed(2) })} />
                         )}
-                        {results.metadata.selected_asset && <Chip label={`Selected ${results.metadata.selected_asset}`} />}
+                        {results.metadata.selected_asset && <Chip label={t('dashboard.selected', { value: results.metadata.selected_asset })} />}
                         {results.metadata.mode && <Chip label={`${String(results.metadata.mode).toUpperCase()}`} />}
                       </Box>
                     )}

@@ -1,9 +1,11 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // Simple horizontal bar chart for momentum scores.
 // scores: object mapping ticker -> score (e.g. 0.12 or -0.05)
 const MomentumBarChart = ({ scores, maxBars = 8 }) => {
+  const { t } = useLanguage();
   if (!scores) return null;
 
   const entries = Object.entries(scores)
@@ -45,11 +47,10 @@ const MomentumBarChart = ({ scores, maxBars = 8 }) => {
         );
       })}
       <Typography variant="caption" color="text.secondary">
-        Top {entries.length} momentum scores
+        {t('chart.topMomentum', { count: entries.length })}
       </Typography>
     </Box>
   );
 };
 
 export default MomentumBarChart;
-

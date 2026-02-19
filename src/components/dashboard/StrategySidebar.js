@@ -10,8 +10,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
+  const { t } = useLanguage();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all | static | dynamic
 
@@ -35,20 +37,20 @@ const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
   return (
     <Paper elevation={2} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-        Strategies
+        {t('sidebar.strategies')}
       </Typography>
 
       <TextField
         size="small"
-        placeholder="Search strategies..."
+        placeholder={t('sidebar.searchPlaceholder')}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        <Chip label="All" clickable color={filter === 'all' ? 'primary' : 'default'} onClick={() => setFilter('all')} />
-        <Chip label="Static" clickable color={filter === 'static' ? 'primary' : 'default'} onClick={() => setFilter('static')} />
-        <Chip label="Live" clickable color={filter === 'dynamic' ? 'primary' : 'default'} onClick={() => setFilter('dynamic')} />
+        <Chip label={t('sidebar.all')} clickable color={filter === 'all' ? 'primary' : 'default'} onClick={() => setFilter('all')} />
+        <Chip label={t('sidebar.static')} clickable color={filter === 'static' ? 'primary' : 'default'} onClick={() => setFilter('static')} />
+        <Chip label={t('sidebar.live')} clickable color={filter === 'dynamic' ? 'primary' : 'default'} onClick={() => setFilter('dynamic')} />
       </Box>
 
       <Divider />
@@ -68,7 +70,7 @@ const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
                       {strategy.name}
                     </Typography>
-                    {strategy.type === 'dynamic' && <Chip label="Live" size="small" />}
+                    {strategy.type === 'dynamic' && <Chip label={t('sidebar.live')} size="small" />}
                   </Box>
                 }
                 secondary={
@@ -81,7 +83,7 @@ const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
           ))}
           {filtered.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              No strategies found.
+              {t('sidebar.noStrategies')}
             </Typography>
           )}
         </List>
@@ -91,4 +93,3 @@ const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
 };
 
 export default StrategySidebar;
-

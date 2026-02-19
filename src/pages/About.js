@@ -1,22 +1,23 @@
 import React from 'react';
 import { Container, Paper, Typography } from '@mui/material';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Simple informational page for the navbar route (/about).
 // Keeps routing consistent so users don't hit a blank page/404.
 const About = () => {
+  const { t } = useLanguage();
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 800, mb: 2 }}>
-          About
+          {t('about.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          Jay Asset Management is a small web app that calculates portfolio allocations based on
-          different strategies (static allocations and live-data strategies like momentum-based
-          allocation).
+          {t('about.body')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Disclaimer: This project is for educational purposes and is not financial advice.
+          {t('about.disclaimer')}
         </Typography>
       </Paper>
     </Container>
@@ -24,4 +25,3 @@ const About = () => {
 };
 
 export default About;
-

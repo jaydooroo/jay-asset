@@ -1,16 +1,18 @@
 import React from 'react';
 import { Box, Grid, TextField, Typography } from '@mui/material';
 import { parseCommaTickers, parseNumber } from '../utils';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // Fallback config panel for any backend strategy:
 // renders parameters based on the backend-provided schema.
 const GenericConfigPanel = ({ strategy, paramValues, onParamChange }) => {
+  const { t } = useLanguage();
   if (!strategy?.parameters || strategy.parameters.length === 0) return null;
 
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-        Strategy Parameters
+        {t('config.strategyParameters')}
       </Typography>
       <Grid container spacing={2}>
         {strategy.parameters.map((param) => (
@@ -67,4 +69,3 @@ export const buildGenericParameters = (paramDefs, paramValues) => {
 };
 
 export default GenericConfigPanel;
-

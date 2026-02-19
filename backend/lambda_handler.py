@@ -1,5 +1,7 @@
 import awsgi
+import json
 from app import app
+from performance import run_monthly_performance_refresh
 from urllib.parse import parse_qs
 
 
@@ -56,4 +58,11 @@ def _normalize_event(event: dict) -> dict:
 
 def handler(event, context):
     """AWS Lambda handler that translates API Gateway events to Flask"""
+    if isinstance(event, dict) and event.get("source") in {"aws.events", "aws.scheduler"}:
+        summary = run_monthly_performance_refresh()
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(summary),
+        }
     return awsgi.response(app, _normalize_event(event), context)

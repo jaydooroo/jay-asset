@@ -12,6 +12,10 @@ def get_strategy(strategy_id: str):
     """Get strategy instance by ID"""
     return STRATEGIES.get(strategy_id)
 
+def list_strategy_ids():
+    """Return available strategy IDs."""
+    return list(STRATEGIES.keys())
+
 def list_strategies():
     """Get list of all available strategies"""
     return {
