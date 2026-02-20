@@ -1,6 +1,5 @@
 import React from 'react';
-import { Alert, Box, Button, Chip, CircularProgress, Paper, Typography } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Alert, Box, Chip, CircularProgress, Paper, Typography } from '@mui/material';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 const asPercent = (value) => {
@@ -8,7 +7,7 @@ const asPercent = (value) => {
   return `${(value * 100).toFixed(2)}%`;
 };
 
-const PerformanceSummary = ({ payload, loading, error, onRefresh }) => {
+const PerformanceSummary = ({ payload, loading, error }) => {
   const { t } = useLanguage();
   const metrics = payload?.metrics || {};
   const hasMetrics = Object.keys(metrics).length > 0;
@@ -24,15 +23,7 @@ const PerformanceSummary = ({ payload, loading, error, onRefresh }) => {
             {t('dashboard.performanceSubtitle')}
           </Typography>
         </Box>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={loading ? <CircularProgress size={14} /> : <RefreshIcon fontSize="small" />}
-          onClick={onRefresh}
-          disabled={loading}
-        >
-          {loading ? t('dashboard.refreshingPerformance') : t('dashboard.refreshPerformance')}
-        </Button>
+        {loading && <CircularProgress size={18} />}
       </Box>
 
       {error && (

@@ -55,7 +55,7 @@ const StrategySidebar = ({ strategies, selectedStrategyId, onSelect }) => {
 
       <Divider />
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', maxHeight: { xs: 280, md: 'none' } }}>
         <List dense disablePadding>
           {filtered.map(([id, strategy]) => (
             <ListItemButton

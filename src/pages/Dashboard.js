@@ -1,18 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
   Chip,
   Container,
+  Divider,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   TextField,
   Typography,
   CircularProgress,
-  Divider,
 } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TuneIcon from '@mui/icons-material/Tune';
 
 import ApiService from '../services/api';
 import StrategyAboutPanel from '../components/StrategyAboutPanel';
@@ -20,7 +30,6 @@ import AllocationDonutChart from '../components/dashboard/AllocationDonutChart';
 import MomentumBarChart from '../components/dashboard/MomentumBarChart';
 import PerformanceSummary from '../components/dashboard/PerformanceSummary';
 import ResultsTable from '../components/dashboard/ResultsTable';
-import StrategySidebar from '../components/dashboard/StrategySidebar';
 import { staticStrategies } from '../data/staticStrategies';
 import { strategyEducation, strategyEducationKo } from '../data/strategyEducation';
 import { buildStrategyParameters, getStrategyConfigPanel } from '../strategies/registry';
@@ -33,21 +42,33 @@ const Dashboard = () => {
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [amount, setAmount] = useState('');
   const [paramValues, setParamValues] = useState({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
+
   const [performanceByStrategy, setPerformanceByStrategy] = useState({});
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [performanceError, setPerformanceError] = useState(null);
+
+  const buildDefaultParams = (strategy) => {
+    if (!strategy || !Array.isArray(strategy.parameters) || strategy.parameters.length === 0) {
+      return {};
+    }
+    const defaults = {};
+    strategy.parameters.forEach((param) => {
+      defaults[param.name] = param.default ?? '';
+    });
+    return defaults;
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
         await ApiService.healthCheck();
         setBackendAvailable(true);
-
         const dynamic = await ApiService.getStrategies();
         setDynamicStrategies(dynamic);
       } catch {
@@ -73,6 +94,22 @@ const Dashboard = () => {
     });
     return merged;
   }, [dynamicStrategies, t]);
+
+  const strategyEntries = useMemo(
+    () => Object.entries(strategies).sort((a, b) => String(a[1].name).localeCompare(String(b[1].name))),
+    [strategies]
+  );
+
+  useEffect(() => {
+    if (selectedStrategyId || strategyEntries.length === 0) return;
+
+    const preferred = strategyEntries.some(([id]) => id === 'paa')
+      ? 'paa'
+      : strategyEntries[0][0];
+
+    setSelectedStrategyId(preferred);
+    setParamValues(buildDefaultParams(strategies[preferred]));
+  }, [selectedStrategyId, strategyEntries, strategies]);
 
   const selectedStrategy = selectedStrategyId ? strategies[selectedStrategyId] : null;
   const selectedPerformance = selectedStrategyId ? performanceByStrategy[selectedStrategyId] : null;
@@ -114,17 +151,7 @@ const Dashboard = () => {
     setResults(null);
     setError(null);
     setPerformanceError(null);
-
-    const next = strategies[id];
-    if (next && next.parameters && next.parameters.length > 0) {
-      const defaults = {};
-      next.parameters.forEach((param) => {
-        defaults[param.name] = param.default ?? '';
-      });
-      setParamValues(defaults);
-    } else {
-      setParamValues({});
-    }
+    setParamValues(buildDefaultParams(strategies[id]));
   };
 
   const handleParamChange = (name, value) => {
@@ -135,23 +162,8 @@ const Dashboard = () => {
     setAmount('');
     setResults(null);
     setError(null);
-    setParamValues({});
-    setSelectedStrategyId('');
     setPerformanceError(null);
-  };
-
-  const handleRefreshPerformance = async () => {
-    if (!selectedStrategyId || !selectedStrategy || selectedStrategy.type !== 'dynamic') return;
-    setPerformanceLoading(true);
-    setPerformanceError(null);
-    try {
-      const payload = await ApiService.getPerformance(selectedStrategyId, true);
-      setPerformanceByStrategy((prev) => ({ ...prev, [selectedStrategyId]: payload }));
-    } catch (err) {
-      setPerformanceError(err.message || t('dashboard.performanceUnavailable'));
-    } finally {
-      setPerformanceLoading(false);
-    }
+    setParamValues(buildDefaultParams(selectedStrategy));
   };
 
   const handleCalculate = async () => {
@@ -185,13 +197,12 @@ const Dashboard = () => {
           totalAmount,
           breakdown,
           type: 'static',
+          strategyId: selectedStrategyId,
         });
         return;
       }
 
-      // Dynamic strategy: let the strategy-specific frontend code decide how to parse params.
       const parameters = buildStrategyParameters(selectedStrategyId, strategy.parameters, paramValues);
-
       const result = await ApiService.calculateAllocation(selectedStrategyId, totalAmount, parameters);
 
       const breakdown = Object.entries(result.allocation).map(([asset, amt]) => ({
@@ -202,7 +213,9 @@ const Dashboard = () => {
 
       if (result.momentum_scores) {
         const scores = result.momentum_scores;
-        breakdown.sort((a, b) => (scores[b.asset] ?? Number.NEGATIVE_INFINITY) - (scores[a.asset] ?? Number.NEGATIVE_INFINITY));
+        breakdown.sort(
+          (a, b) => (scores[b.asset] ?? Number.NEGATIVE_INFINITY) - (scores[a.asset] ?? Number.NEGATIVE_INFINITY)
+        );
       } else {
         breakdown.sort((a, b) => b.percentage - a.percentage);
       }
@@ -213,6 +226,7 @@ const Dashboard = () => {
         totalAmount,
         breakdown,
         type: 'dynamic',
+        strategyId: selectedStrategyId,
         metadata: {
           date: result.date,
           defensive_ratio: result.defensive_ratio,
@@ -246,12 +260,19 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-root">
-      <Container maxWidth="xl">
-        <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.9)' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TrendingUpIcon sx={{ fontSize: 34 }} />
+      <Container maxWidth="xl" className="dashboard-content">
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2, md: 2.4 },
+            borderRadius: 3,
+            border: '1px solid var(--surface-border)',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'center' }, gap: 1.2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h5" sx={{ fontWeight: 900 }}>
+              <Typography variant="h4" sx={{ fontWeight: 900, fontSize: { xs: '1.4rem', md: '1.9rem' }, mb: 0.6 }}>
                 {t('dashboard.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -263,179 +284,243 @@ const Dashboard = () => {
         </Paper>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          <Alert severity="error" onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
 
-        <Box className="dashboard-grid-wrap">
-          <Box className="dashboard-grid">
-            {/* Left: Sidebar */}
-            <StrategySidebar
-              strategies={strategies}
-              selectedStrategyId={selectedStrategyId}
-              onSelect={handleSelectStrategy}
-            />
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2, md: 2.4 },
+            borderRadius: 3,
+            border: '1px solid var(--surface-border)',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5 }}>
+            {t('dashboard.quickActionTitle')}
+          </Typography>
 
-            {/* Middle: Configure */}
-            <Paper elevation={2} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                {t('dashboard.configure')}
+          <Grid container spacing={1.6}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel id="strategy-select-label">{t('dashboard.strategySelectLabel')}</InputLabel>
+                <Select
+                  labelId="strategy-select-label"
+                  value={selectedStrategyId}
+                  label={t('dashboard.strategySelectLabel')}
+                  onChange={(e) => handleSelectStrategy(String(e.target.value))}
+                  MenuProps={{
+                    disableScrollLock: true,
+                    PaperProps: {
+                      sx: {
+                        maxWidth: 'calc(100vw - 24px)',
+                      },
+                    },
+                  }}
+                >
+                  {strategyEntries.map(([id, strategy]) => (
+                    <MenuItem key={id} value={id}>
+                      {strategy.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label={t('dashboard.investmentAmount')}
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={t('dashboard.amountPlaceholder')}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+              />
+            </Grid>
+          </Grid>
+
+          {selectedStrategy && (
+            <Box sx={{ mt: 1.6 }}>
+              <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                {selectedStrategy.name}
               </Typography>
-
-              {!selectedStrategy && (
-                <Typography variant="body2" color="text.secondary">
-                  {t('dashboard.selectStrategyPrompt')}
-                </Typography>
-              )}
-
-              {selectedStrategy && (
-                <>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 900 }}>
-                      {selectedStrategy.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedStrategy.description}
-                    </Typography>
-                    {selectedEducation?.rebalanceFrequency && (
-                      <Box sx={{ mt: 1 }}>
-                        <Chip label={t('dashboard.rebalance', { value: selectedEducation.rebalanceFrequency })} size="small" />
-                      </Box>
-                    )}
-                  </Box>
-
-                  {selectedEducation && <StrategyAboutPanel education={selectedEducation} />}
-
-                  <Divider />
-
-                  <TextField
-                    fullWidth
-                    label={t('dashboard.investmentAmount')}
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder={t('dashboard.amountPlaceholder')}
-                    InputProps={{
-                      startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
-                    }}
-                  />
-
-                  {/* Strategy-specific UI for parameters (PAA/VAA), with a generic fallback. */}
-                  <ConfigPanel strategy={selectedStrategy} paramValues={paramValues} onParamChange={handleParamChange} />
-
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <CalculateIcon />}
-                      onClick={handleCalculate}
-                      disabled={loading}
-                    >
-                      {loading ? t('dashboard.calculating') : t('dashboard.calculate')}
-                    </Button>
-                    <Button variant="outlined" onClick={handleReset} disabled={loading}>
-                      {t('dashboard.reset')}
-                    </Button>
-                  </Box>
-                </>
-              )}
-            </Paper>
-
-            {/* Right: Results */}
-            <Paper elevation={2} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                {t('dashboard.results')}
+              <Typography variant="body2" color="text.secondary">
+                {selectedStrategy.description}
               </Typography>
-
-              {selectedStrategy && selectedStrategy.type === 'dynamic' && (
-                <PerformanceSummary
-                  payload={selectedPerformance}
-                  loading={performanceLoading}
-                  error={performanceError}
-                  onRefresh={handleRefreshPerformance}
+              {selectedEducation?.rebalanceFrequency && (
+                <Chip
+                  label={t('dashboard.rebalance', { value: selectedEducation.rebalanceFrequency })}
+                  size="small"
+                  sx={{ mt: 1 }}
                 />
               )}
+            </Box>
+          )}
 
-              {!results && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {t('dashboard.runPrompt')}
+          <Box sx={{ mt: 1.8, display: 'flex', gap: 1.2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <CalculateIcon />}
+              onClick={handleCalculate}
+              disabled={loading || !selectedStrategyId}
+              sx={{
+                flex: { xs: '1 1 100%', sm: '1 1 auto' },
+                px: 2.2,
+                textTransform: 'none',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #0e7490 0%, #2563eb 100%)',
+              }}
+            >
+              {loading ? t('dashboard.calculating') : t('dashboard.calculate')}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleReset}
+              disabled={loading || !selectedStrategyId}
+              sx={{
+                flex: { xs: '1 1 100%', sm: '1 1 auto' },
+                textTransform: 'none',
+                fontWeight: 700,
+              }}
+            >
+              {t('dashboard.reset')}
+            </Button>
+          </Box>
+
+          {selectedStrategy && (
+            <Accordion
+              expanded={showAdvanced}
+              onChange={(_, expanded) => setShowAdvanced(expanded)}
+              disableGutters
+              elevation={0}
+              sx={{
+                mt: 1.8,
+                backgroundColor: 'transparent',
+                border: '1px solid var(--surface-border)',
+                borderRadius: '14px !important',
+                '&::before': { display: 'none' },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{ minHeight: 48 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TuneIcon sx={{ fontSize: 18 }} />
+                  <Typography sx={{ fontWeight: 700 }}>{t('dashboard.advancedSettings')}</Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <ConfigPanel strategy={selectedStrategy} paramValues={paramValues} onParamChange={handleParamChange} />
+                {selectedEducation && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <StrategyAboutPanel education={selectedEducation} />
+                  </>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          )}
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2, md: 2.4 },
+            borderRadius: 3,
+            border: '1px solid var(--surface-border)',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            minWidth: 0,
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+            {t('dashboard.results')}
+          </Typography>
+
+          {selectedStrategy && selectedStrategy.type === 'dynamic' && (
+            <PerformanceSummary payload={selectedPerformance} loading={performanceLoading} error={performanceError} />
+          )}
+
+          {!results && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {t('dashboard.runPrompt')}
+            </Typography>
+          )}
+
+          {results && (
+            <>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t('dashboard.strategy')}
                 </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                  {results.strategy}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('dashboard.total', { currency: '$', total: Number(results.totalAmount).toLocaleString() })}
+                </Typography>
+              </Box>
+
+              {results.metadata?.missing_tickers && results.metadata.missing_tickers.length > 0 && (
+                <Alert severity="warning" sx={{ mt: 1.2 }}>
+                  {t('dashboard.missingTickers', { tickers: results.metadata.missing_tickers.join(', ') })}
+                </Alert>
               )}
 
-              {results && (
-                <>
-                  {/* Scrollable top area so the table stays in a consistent position/size. */}
-                  <Box sx={{ flex: 1, overflow: 'auto', mt: 1, pr: 1 }}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {t('dashboard.strategy')}
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 900 }}>
-                        {results.strategy}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {t('dashboard.total', { currency: '$', total: Number(results.totalAmount).toLocaleString() })}
-                      </Typography>
-                      {selectedEducation?.rebalanceFrequency && (
-                        <Box sx={{ mt: 1 }}>
-                          <Chip label={t('dashboard.rebalance', { value: selectedEducation.rebalanceFrequency })} size="small" />
-                        </Box>
-                      )}
-                    </Box>
+              <Divider sx={{ my: 2 }} />
 
-                    {results.metadata?.missing_tickers && results.metadata.missing_tickers.length > 0 && (
-                      <Alert severity="warning" sx={{ mt: 1 }}>
-                        {t('dashboard.missingTickers', { tickers: results.metadata.missing_tickers.join(', ') })}
-                      </Alert>
-                    )}
+              <Box className="results-grid">
+                <Box className="results-scroll">
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
+                      {t('dashboard.allocationChart')}
+                    </Typography>
+                    <AllocationDonutChart data={donutData} strategyId={results.strategyId} />
+                  </Box>
 
-                    <Divider sx={{ my: 2 }} />
+                  <Box sx={{ minHeight: 12 }} />
 
+                  {momentumScores && (
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                        {t('dashboard.allocationChart')}
+                        {t('dashboard.momentumChart')}
                       </Typography>
-                      <AllocationDonutChart data={donutData} />
+                      <MomentumBarChart scores={momentumScores} strategyId={results.strategyId} />
                     </Box>
+                  )}
 
-                    <Box sx={{ minHeight: 10 }} />
+                  {results.metadata && (
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                      {typeof results.metadata.defensive_ratio === 'number' && (
+                        <Chip label={t('dashboard.defensive', { value: (results.metadata.defensive_ratio * 100).toFixed(1) })} />
+                      )}
+                      {typeof results.metadata.offensive_ratio === 'number' && (
+                        <Chip label={t('dashboard.offensive', { value: (results.metadata.offensive_ratio * 100).toFixed(1) })} />
+                      )}
+                      {typeof results.metadata.avg_momentum === 'number' && (
+                        <Chip label={t('dashboard.avg', { value: (results.metadata.avg_momentum * 100).toFixed(2) })} />
+                      )}
+                      {results.metadata.selected_asset && <Chip label={t('dashboard.selected', { value: results.metadata.selected_asset })} />}
+                      {results.metadata.mode && <Chip label={`${String(results.metadata.mode).toUpperCase()}`} />}
+                    </Box>
+                  )}
+                </Box>
 
-                    {momentumScores && (
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                          {t('dashboard.momentumChart')}
-                        </Typography>
-                        <MomentumBarChart scores={momentumScores} />
-                      </Box>
-                    )}
-
-                    {results.metadata && (
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-                        {typeof results.metadata.defensive_ratio === 'number' && (
-                          <Chip label={t('dashboard.defensive', { value: (results.metadata.defensive_ratio * 100).toFixed(1) })} />
-                        )}
-                        {typeof results.metadata.offensive_ratio === 'number' && (
-                          <Chip label={t('dashboard.offensive', { value: (results.metadata.offensive_ratio * 100).toFixed(1) })} />
-                        )}
-                        {typeof results.metadata.avg_momentum === 'number' && (
-                          <Chip label={t('dashboard.avg', { value: (results.metadata.avg_momentum * 100).toFixed(2) })} />
-                        )}
-                        {results.metadata.selected_asset && <Chip label={t('dashboard.selected', { value: results.metadata.selected_asset })} />}
-                        {results.metadata.mode && <Chip label={`${String(results.metadata.mode).toUpperCase()}`} />}
-                      </Box>
-                    )}
-                  </Box>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <Box sx={{ flexShrink: 0 }}>
-                    <ResultsTable rows={results.breakdown} momentumScores={momentumScores} />
-                  </Box>
-                </>
-              )}
-            </Paper>
-          </Box>
-        </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <ResultsTable
+                    rows={results.breakdown}
+                    momentumScores={momentumScores}
+                    strategyId={results.strategyId}
+                  />
+                </Box>
+              </Box>
+            </>
+          )}
+        </Paper>
       </Container>
     </div>
   );

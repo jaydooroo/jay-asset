@@ -25,7 +25,15 @@ const MomentumBarChart = ({ scores, maxBars = 8 }) => {
         const isPositive = score >= 0;
 
         return (
-          <Box key={ticker} sx={{ display: 'grid', gridTemplateColumns: '54px 1fr 64px', gap: 1, alignItems: 'center' }}>
+          <Box
+            key={ticker}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '56px 1fr 58px', sm: '64px 1fr 64px' },
+              gap: 1,
+              alignItems: 'center',
+            }}
+          >
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
               {ticker}
             </Typography>

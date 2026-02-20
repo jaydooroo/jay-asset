@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useLanguage } from '../../i18n/LanguageContext';
+import TickerInfoLabel from '../common/TickerInfoLabel';
 
 const DEFAULT_COLORS = [
   '#4F46E5',
@@ -39,7 +40,7 @@ const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAU
   let offset = 0;
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', gap: 2, alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' } }}>
       <Box sx={{ position: 'relative', width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
@@ -106,9 +107,9 @@ const AllocationDonutChart = ({ data, size = 160, thickness = 18, colors = DEFAU
                 backgroundColor: colors[idx % colors.length],
               }}
             />
-            <Typography variant="body2" sx={{ minWidth: 42 }}>
-              {slice.label}
-            </Typography>
+            <Box sx={{ minWidth: 86 }}>
+              <TickerInfoLabel ticker={slice.label} fontWeight={600} />
+            </Box>
             <Typography variant="body2" color="text.secondary">
               {slice.value.toFixed(1)}%
             </Typography>
