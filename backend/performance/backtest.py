@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from market_data import download_close_prices
+from market import get_price_repository
 
 from .config import performance_backtest_months, performance_lookback_days
 
@@ -58,7 +58,8 @@ def run_monthly_walkforward_backtest(spec, parameters: dict | None = None) -> di
 
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=fetch_days)
-    prices, failed = download_close_prices(universe, start_date, end_date)
+    price_repository = get_price_repository()
+    prices, failed = price_repository.get_close_prices(universe, start_date, end_date)
     if prices is None or prices.empty:
         return {"error": "No price data available", "missing_tickers": sorted(set(failed))}
 

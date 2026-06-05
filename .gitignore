@@ -41,6 +41,7 @@ backend/deployment.zip
 
 # local/dev artifacts
 tmpclaude-*
+.dynamodb-local/
 .vscode/
 .idea/
 Thumbs.db

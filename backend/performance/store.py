@@ -1,18 +1,13 @@
 import json
 import time
 
-from .config import performance_enabled, performance_table_name, performance_ttl_seconds
+from market.dynamodb_client import dynamodb_resource
 
-try:
-    import boto3  # Available by default in AWS Lambda Python runtimes
-except Exception:  # pragma: no cover
-    boto3 = None
+from .config import performance_enabled, performance_table_name, performance_ttl_seconds
 
 
 def _ddb_table():
-    if boto3 is None:
-        return None
-    dynamodb = boto3.resource("dynamodb")
+    dynamodb = dynamodb_resource()
     return dynamodb.Table(performance_table_name())
 
 

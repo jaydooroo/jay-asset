@@ -2,6 +2,65 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Project Build / Deployment Quick Reference
+
+This project has two deployable parts:
+
+- Frontend React app: built into the root `build/` folder.
+- Backend Flask/Lambda app: packaged into `backend/deployment.zip`.
+
+### Frontend production build
+
+From the project root:
+
+```powershell
+cd D:\project\JehyeonAssetManagement\jay-asset
+npm run build
+```
+
+This creates:
+
+```text
+build/
+```
+
+Upload this folder to the chosen frontend hosting target, such as S3/CloudFront or AWS Amplify.
+
+### Backend Lambda package build
+
+The backend Lambda package should be built with Docker so packages like `numpy` and `pandas`
+are installed for the Linux runtime used by AWS Lambda.
+
+From the project root:
+
+```powershell
+cd D:\project\JehyeonAssetManagement\jay-asset
+
+docker ps
+
+docker run --rm `
+  -v "${PWD}/backend:/var/task" `
+  public.ecr.aws/sam/build-python3.11:latest `
+  /bin/sh -c "rm -rf /var/task/lambda_build /var/task/deployment.zip && mkdir -p /var/task/lambda_build && pip install -r /var/task/requirements.txt -t /var/task/lambda_build && cp /var/task/*.py /var/task/lambda_build/ && cp -r /var/task/strategies /var/task/cache /var/task/market /var/task/performance /var/task/lambda_build/ && cd /var/task/lambda_build && zip -r /var/task/deployment.zip ."
+
+Get-Item .\backend\deployment.zip
+```
+
+This creates:
+
+```text
+backend/deployment.zip
+```
+
+Upload this zip to the AWS Lambda function that uses:
+
+```text
+Runtime: Python 3.11
+Handler: lambda_handler.handler
+```
+
+For more backend-specific deployment details, see `backend/README.md`.
+
 ## Available Scripts
 
 In the project directory, you can run:

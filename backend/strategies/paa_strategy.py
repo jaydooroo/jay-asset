@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict
 from .base_strategy import BaseStrategy
-from market_data import download_close_prices
+from market import get_price_repository
 
 class PAAStrategy(BaseStrategy):
     """Protective Asset Allocation Strategy"""
@@ -52,14 +52,22 @@ class PAAStrategy(BaseStrategy):
         start_date = end_date - timedelta(days=lookback_months * 30 + 30)
 
         try:
-            price_data, failed_tickers = download_close_prices(all_tickers, start_date, end_date)
+            price_repository = get_price_repository()
+            price_data, failed_tickers = price_repository.get_close_prices(all_tickers, start_date, end_date)
 
             # Drop columns with all NaN values
             price_data = price_data.dropna(axis=1, how='all')
 
             # Check if we have enough data
             if price_data.empty:
-                return {'error': 'No valid price data after cleaning'}
+                return {
+                    'error': (
+                        'No valid price data was returned by the market data providers. '
+                        'In AWS this usually means outbound internet access is blocked '
+                        'or Yahoo Finance/Stooq returned empty data.'
+                    ),
+                    'missing_tickers': failed_tickers or list(all_tickers),
+                }
 
             if len(price_data) < 252:
                 return {'error': f'Insufficient data: need at least 252 days, got {len(price_data)} days'}

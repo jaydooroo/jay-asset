@@ -56,13 +56,50 @@ def _normalize_event(event: dict) -> dict:
     return event
 
 
+def _normalize_lambda_response(response: dict) -> dict:
+    """
+    Normalize awsgi output for Lambda Function URLs.
+
+    awsgi may return `statusCode` as a string (for example, "200"). API Gateway
+    is fairly tolerant of that, but Lambda Function URLs expect a normal Lambda
+    proxy response shape where `statusCode` is an integer.
+    """
+    if not isinstance(response, dict):
+        return response
+
+    status_code = response.get("statusCode")
+    if isinstance(status_code, str):
+        try:
+            response["statusCode"] = int(status_code)
+        except ValueError:
+            pass
+
+    return response
+
+
 def handler(event, context):
     """AWS Lambda handler that translates API Gateway events to Flask"""
-    if isinstance(event, dict) and event.get("source") in {"aws.events", "aws.scheduler"}:
+    if isinstance(event, dict) and event.get("job") == "market_data_ingest":
+        from market.ingest import run_dynamodb_price_ingest
+
+        summary = run_dynamodb_price_ingest(
+            tickers=event.get("tickers"),
+            lookback_days=int(event.get("lookback_days", 7)),
+        )
+        return {
+            "statusCode": 200 if summary.get("ok") else 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(summary),
+        }
+
+    if isinstance(event, dict) and (
+        event.get("job") == "performance_refresh"
+        or event.get("source") in {"aws.events", "aws.scheduler"}
+    ):
         summary = run_monthly_performance_refresh()
         return {
             "statusCode": 200,
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps(summary),
         }
-    return awsgi.response(app, _normalize_event(event), context)
+    return _normalize_lambda_response(awsgi.response(app, _normalize_event(event), context))

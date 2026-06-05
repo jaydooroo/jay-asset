@@ -41,6 +41,18 @@ def _canonical_parameters(strategy_id: str, parameters: dict) -> dict:
         if "defensive_assets" in normalized:
             normalized["defensive_assets"] = _normalize_tickers(normalized["defensive_assets"])
 
+    if strategy_id == "cdm":
+        for key in ("equity_assets", "credit_assets", "reit_assets", "hedge_assets"):
+            if key in normalized:
+                normalized[key] = _normalize_tickers(normalized[key])
+        if "cash_asset" in normalized:
+            normalized["cash_asset"] = str(normalized["cash_asset"]).strip().upper()
+        if isinstance(normalized.get("lookback_months"), str):
+            try:
+                normalized["lookback_months"] = int(normalized["lookback_months"].strip())
+            except Exception:
+                pass
+
     return normalized
 
 

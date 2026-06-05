@@ -92,10 +92,13 @@ def calculate_allocation():
             }), 500
 
         if 'error' in plan:
-            return jsonify({
+            payload = {
                 'success': False,
                 'error': plan['error']
-            }), 500
+            }
+            if plan.get('missing_tickers'):
+                payload['missing_tickers'] = plan.get('missing_tickers')
+            return jsonify(payload), 500
 
         if ck:
             cache_set_plan(ck, plan)
@@ -103,10 +106,13 @@ def calculate_allocation():
 
         # Check for errors in result
         if 'error' in result:
-            return jsonify({
+            payload = {
                 'success': False,
                 'error': result['error']
-            }), 500
+            }
+            if result.get('missing_tickers'):
+                payload['missing_tickers'] = result.get('missing_tickers')
+            return jsonify(payload), 500
 
         return jsonify({
             'success': True,

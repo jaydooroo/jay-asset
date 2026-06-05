@@ -1,7 +1,7 @@
 import math
 from datetime import datetime, timedelta
 
-from market_data import download_close_prices
+from market import get_price_repository
 
 from .config import performance_lookback_days
 
@@ -45,7 +45,8 @@ def snapshot_metrics_from_weights(weights: dict) -> dict:
     start_date = end_date - timedelta(days=performance_lookback_days() + 10)
     tickers = list(normalized.keys())
 
-    price_data, failed = download_close_prices(tickers, start_date, end_date)
+    price_repository = get_price_repository()
+    price_data, failed = price_repository.get_close_prices(tickers, start_date, end_date)
     if price_data is None or price_data.empty:
         return {"error": "No price data available", "missing_tickers": failed}
 

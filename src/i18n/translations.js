@@ -576,3 +576,21 @@ translations.ko.table = {
   ...(translations.ko.table || {}),
   tickerHint: '\uD2F0\uCEE4 \uC2EC\uBCFC\uC5D0 \uB9C8\uC6B0\uC2A4 \uC624\uBC84\uB97C \uD558\uAC70\uB098 \uD0ED\uD558\uBA74 \uC790\uC0B0 \uC124\uBA85\uC744 \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4.',
 };
+
+translations.en.strategies = {
+  ...(translations.en.strategies || {}),
+  cdm: {
+    name: 'CDM (Composite Dual Momentum)',
+    description:
+      'Divides capital across four sleeves and selects the stronger 12-month asset in each sleeve, with a cash filter.',
+  },
+};
+
+translations.ko.strategies = {
+  ...(translations.ko.strategies || {}),
+  cdm: {
+    name: 'CDM (종합 듀얼 모멘텀)',
+    description:
+      '포트폴리오를 4개 파트로 나누고 각 파트에서 12개월 수익률이 더 높은 자산을 선택하며, 현금 필터를 적용합니다.',
+  },
+};

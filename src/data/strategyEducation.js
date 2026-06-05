@@ -149,6 +149,35 @@ export const strategyEducation = {
       },
     ],
   },
+  cdm: {
+    title: 'CDM (Composite Dual Momentum)',
+    rebalanceFrequency: 'Monthly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          'Splits the portfolio into 4 sleeves (equity, credit, real estate, hedge), each with 25% target weight.',
+          'Within each sleeve, compares 12-month returns of two ETFs and picks the stronger one.',
+        ],
+      },
+      {
+        heading: 'Cash filter',
+        bullets: [
+          'Uses BIL as a cash proxy.',
+          'If both sleeve ETFs underperform BIL over the same lookback, that sleeve allocates to BIL.',
+        ],
+      },
+      {
+        heading: 'Default sleeve pairs',
+        bullets: [
+          'Equity: SPY vs EFA',
+          'Credit: LQD vs HYG',
+          'Real estate: VNQ vs REM',
+          'Hedge: TLT vs GLD',
+        ],
+      },
+    ],
+  },
 };
 
 export const strategyEducationKo = {
@@ -210,6 +239,35 @@ export const strategyEducationKo = {
         bullets: [
           '12개월 수익률 계산이 가능할 만큼 충분한 과거 데이터가 필요합니다.',
           '실시간 시세 데이터(Yahoo Finance, Stooq)를 사용합니다.',
+        ],
+      },
+    ],
+  },
+  cdm: {
+    title: 'CDM (종합 듀얼 모멘텀)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '전략 개요',
+        bullets: [
+          '포트폴리오를 4개 파트(주식, 회사채, 부동산, 위기대응)로 나누고 각 파트를 25%로 운용합니다.',
+          '각 파트에서 2개 ETF의 최근 12개월 수익률을 비교해 더 강한 ETF를 선택합니다.',
+        ],
+      },
+      {
+        heading: '현금 필터',
+        bullets: [
+          '현금 대체 자산으로 BIL을 사용합니다.',
+          '파트 내 두 ETF 모두 BIL보다 수익률이 낮으면 해당 파트는 BIL에 배분합니다.',
+        ],
+      },
+      {
+        heading: '기본 파트 구성',
+        bullets: [
+          '주식: SPY vs EFA',
+          '회사채: LQD vs HYG',
+          '부동산: VNQ vs REM',
+          '위기대응: TLT vs GLD',
         ],
       },
     ],

@@ -24,6 +24,99 @@ python app.py
 
 The backend will run on `http://localhost:5000`
 
+## Building the AWS Lambda Deployment Package
+
+The backend is deployed to AWS Lambda as a zip file:
+
+```text
+backend/deployment.zip
+```
+
+Build this zip with Docker instead of installing dependencies directly on Windows. AWS Lambda
+runs on Linux, and compiled packages such as `numpy` and `pandas` need Linux-compatible files.
+
+### 1. Go to the project root
+
+Run this from PowerShell:
+
+```powershell
+cd D:\project\JehyeonAssetManagement\jay-asset
+```
+
+The project root is the folder that contains:
+
+```text
+backend/
+src/
+public/
+package.json
+docker-compose.yml
+```
+
+### 2. Confirm Docker is running
+
+```powershell
+docker ps
+```
+
+If this fails, open Docker Desktop first and wait until the Docker engine is running.
+
+### 3. Build `backend/deployment.zip`
+
+```powershell
+docker run --rm `
+  -v "${PWD}/backend:/var/task" `
+  public.ecr.aws/sam/build-python3.11:latest `
+  /bin/sh -c "rm -rf /var/task/lambda_build /var/task/deployment.zip && mkdir -p /var/task/lambda_build && pip install -r /var/task/requirements.txt -t /var/task/lambda_build && cp /var/task/*.py /var/task/lambda_build/ && cp -r /var/task/strategies /var/task/cache /var/task/market /var/task/performance /var/task/lambda_build/ && cd /var/task/lambda_build && zip -r /var/task/deployment.zip ."
+```
+
+This command:
+
+1. Starts a temporary AWS SAM Python 3.11 build container.
+2. Mounts the local `backend/` folder as `/var/task` inside the container.
+3. Removes any old `lambda_build/` folder and old `deployment.zip`.
+4. Installs `requirements.txt` into `lambda_build/`.
+5. Copies backend source files and folders into `lambda_build/`.
+6. Creates `backend/deployment.zip`.
+
+### 4. Confirm the zip exists
+
+```powershell
+Get-Item .\backend\deployment.zip
+```
+
+The file should have a non-zero size, usually tens of MB because it includes dependencies.
+
+### Lambda settings
+
+When uploading this zip to AWS Lambda, use:
+
+```text
+Runtime: Python 3.11
+Handler: lambda_handler.handler
+```
+
+Recommended environment variables:
+
+```text
+MARKET_PRICE_SOURCE=dynamodb
+MARKET_PRICE_TABLE=jay-asset-daily-prices
+
+PERFORMANCE_ENABLED=true
+PERFORMANCE_TABLE=jay-asset-performance
+
+CACHE_ENABLED=true
+CACHE_TABLE=jay-asset-cache
+
+MARKET_INGEST_PROVIDER=tiingo
+TIINGO_API_KEY=<your-tiingo-api-key>
+
+AWS_DEFAULT_REGION=us-east-1
+```
+
+Do not set `MARKET_DYNAMODB_ENDPOINT_URL` in AWS Lambda. That variable is only for local
+DynamoDB running in Docker.
+
 ## API Endpoints
 
 ### GET `/api/strategies`
@@ -104,6 +197,9 @@ Adding strategies:
 - The shared engine in `backend/performance/backtest.py` handles monthly walk-forward simulation.
 
 ## Adding New Strategies
+
+Before implementation, read:
+- `backend/NEW_STRATEGY_CHECKLIST.md` (covers runtime logic, cache normalization, performance spec, i18n, and verification)
 
 1. Create a new file in `strategies/` (e.g., `my_strategy.py`)
 2. Inherit from `BaseStrategy`

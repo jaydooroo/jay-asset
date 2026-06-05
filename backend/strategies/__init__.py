@@ -1,11 +1,14 @@
 
 from .paa_strategy import PAAStrategy
 from .vaa_strategy import VAAStrategy
+from .cdm_strategy import CDMStrategy
 
 # Registry of all available strategies
+# If you add a new entry, also follow backend/NEW_STRATEGY_CHECKLIST.md.
 STRATEGIES = {
     'paa': PAAStrategy(),
-    'vaa': VAAStrategy()
+    'vaa': VAAStrategy(),
+    'cdm': CDMStrategy(),
 }
 
 def get_strategy(strategy_id: str):

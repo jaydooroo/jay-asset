@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Union
 
 from .base_strategy import BaseStrategy
-from market_data import download_close_prices
+from market import get_price_repository
 
 
 class VAAStrategy(BaseStrategy):
@@ -83,7 +83,8 @@ class VAAStrategy(BaseStrategy):
         end_date = datetime.today()
         start_date = end_date - timedelta(days=420)  
 
-        price_data, failed = download_close_prices(tickers, start_date, end_date)
+        price_repository = get_price_repository()
+        price_data, failed = price_repository.get_close_prices(tickers, start_date, end_date)
         price_data = price_data.dropna(axis=1, how="all")
 
         if price_data.empty:
