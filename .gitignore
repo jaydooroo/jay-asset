@@ -23,6 +23,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env*.local
 
 npm-debug.log*
 yarn-debug.log*
@@ -37,7 +38,8 @@ backend/database/*.sqlite3
 backend/database/*.db-*
 backend/database/*.sqlite3-*
 backend/lambda_pkg/*
-backend/deployment.zip
+backend/deployment*.zip
+backend/lambda_build/
 
 # local/dev artifacts
 tmpclaude-*
