@@ -262,6 +262,7 @@ const Dashboard = () => {
     <div className="dashboard-root">
       <Container maxWidth="xl" className="dashboard-content">
         <Paper
+          className="dashboard-hero-card"
           elevation={0}
           sx={{
             p: { xs: 2, md: 2.4 },
@@ -290,6 +291,7 @@ const Dashboard = () => {
         )}
 
         <Paper
+          className="dashboard-control-card"
           elevation={0}
           sx={{
             p: { xs: 2, md: 2.4 },
@@ -428,6 +430,7 @@ const Dashboard = () => {
         </Paper>
 
         <Paper
+          className="dashboard-results-card"
           elevation={0}
           sx={{
             p: { xs: 2, md: 2.4 },

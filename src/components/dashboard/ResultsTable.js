@@ -18,15 +18,17 @@ const ResultsTable = ({ rows, momentumScores, height = null }) => {
   const { t } = useLanguage();
   if (!rows || rows.length === 0) return null;
 
-  const containerSx = height ? { maxHeight: height, overflowX: 'auto' } : { overflowX: 'auto' };
+  const containerSx = height
+    ? { maxHeight: height, overflowX: 'auto', maxWidth: '100%' }
+    : { overflowX: 'auto', maxWidth: '100%' };
 
   return (
-    <Box>
+    <Box sx={{ minWidth: 0, maxWidth: '100%' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
         {t('table.title')}
       </Typography>
       <TableContainer sx={containerSx}>
-        <Table size="small" stickyHeader sx={{ width: '100%' }}>
+        <Table size="small" stickyHeader sx={{ width: '100%', minWidth: { xs: 420, sm: 'auto' } }}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: { xs: '34%', sm: '30%' } }}>

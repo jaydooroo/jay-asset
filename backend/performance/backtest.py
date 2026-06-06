@@ -35,8 +35,24 @@ def _max_drawdown(equity_curve: pd.Series) -> float:
 
 
 def _monthly_prices(prices: pd.DataFrame) -> pd.DataFrame:
-    # Month-end sampled prices (last available trading day in each month).
-    return prices.resample("ME").last().dropna(how="all")
+    """
+    Return the last available trading-day price for each completed month.
+
+    pandas `resample("ME")` labels each row with the calendar month-end date.
+    That can make an incomplete current month look like it ends in the future
+    (for example, data through 2026-06-05 becomes labeled 2026-06-30).
+
+    For a monthly walk-forward summary, we instead:
+    - keep the original trading-day index, so the label is the actual data date
+    - exclude the current calendar month, because its monthly result is not done
+    """
+    if prices is None or prices.empty:
+        return prices
+
+    monthly = prices.groupby(prices.index.to_period("M")).tail(1)
+    current_month = pd.Timestamp.utcnow().tz_localize(None).to_period("M")
+    monthly = monthly[monthly.index.to_period("M") < current_month]
+    return monthly.dropna(how="all")
 
 
 def run_monthly_walkforward_backtest(spec, parameters: dict | None = None) -> dict:
@@ -54,7 +70,11 @@ def run_monthly_walkforward_backtest(spec, parameters: dict | None = None) -> di
 
     months = max(1, int(performance_backtest_months()))
     min_lookback_days = max(int(spec.min_lookback_days), int(performance_lookback_days()))
-    fetch_days = min_lookback_days + (months + 2) * 31 + 45
+    # Need `months + 1` qualified month-end points to produce `months`
+    # monthly returns. Since `_monthly_prices` intentionally excludes the
+    # incomplete current month, fetch an extra month of history so the latest
+    # completed-month window still has enough rebalance points.
+    fetch_days = min_lookback_days + (months + 3) * 31 + 45
 
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=fetch_days)

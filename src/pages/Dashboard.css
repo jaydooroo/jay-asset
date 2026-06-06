@@ -3,6 +3,7 @@
   position: relative;
   background: var(--app-bg);
   padding: 16px 0 24px;
+  overflow-x: clip;
 }
 
 .dashboard-root::before,
@@ -35,37 +36,98 @@
   z-index: 1;
   display: grid;
   gap: 14px;
+  min-width: 0;
+}
+
+.dashboard-hero-card,
+.dashboard-control-card,
+.dashboard-results-card {
+  min-width: 0;
 }
 
 .results-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  min-width: 0;
 }
 
 .results-scroll {
   overflow: visible;
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
-  .dashboard-content {
-    gap: 16px;
+  .dashboard-root {
+    padding: 20px 0 32px;
   }
 
-  .results-grid {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  .dashboard-content {
+    grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+    gap: 18px;
     align-items: start;
   }
 
+  .dashboard-hero-card {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-control-card {
+    position: sticky;
+    top: 18px;
+  }
+
+  .dashboard-control-card .MuiInputBase-root,
+  .dashboard-control-card .MuiInputLabel-root,
+  .dashboard-control-card .MuiButton-root {
+    font-size: 0.92rem;
+  }
+
+  .dashboard-control-card .MuiAccordionSummary-root {
+    min-height: 42px;
+  }
+
+  .dashboard-results-card {
+    min-height: 520px;
+  }
+
+  .results-grid {
+    grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
+    align-items: start;
+    gap: 18px;
+  }
+
   .results-scroll {
-    max-height: 540px;
+    max-height: 620px;
     overflow: auto;
     padding-right: 8px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dashboard-content {
+    grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+    gap: 20px;
   }
 }
 
 @media (max-width: 599px) {
   .dashboard-root {
     padding: 12px 0 18px;
+    overflow-x: hidden;
+  }
+
+  .dashboard-root::before {
+    width: 260px;
+    height: 260px;
+    top: -130px;
+    right: -120px;
+  }
+
+  .dashboard-root::after {
+    width: 300px;
+    height: 300px;
+    left: -180px;
+    bottom: -180px;
   }
 }
