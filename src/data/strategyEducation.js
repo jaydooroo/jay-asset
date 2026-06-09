@@ -95,12 +95,7 @@ export const strategyEducation = {
           'ETF Tickers: comma-separated list (example: SPY, QQQ, IWM).',
           'Top N ETFs: number of ETFs to consider for the offensive bucket.',
           'Lookback Months: history window used for the moving average calculation.',
-        ],
-      },
-      {
-        heading: 'Data requirement',
-        bullets: [
-          'Uses live market data (Yahoo Finance and/or Stooq); calculations may fail if your network blocks the data source or rate-limits requests.',
+          'Custom tickers need stored price history before they can be used in calculations.',
         ],
       },
     ],
@@ -138,13 +133,7 @@ export const strategyEducation = {
         bullets: [
           'Offensive: SPY, EFA, EEM, AGG',
           'Defensive: LQD, IEF, SHY',
-        ],
-      },
-      {
-        heading: 'Data requirement',
-        bullets: [
-          'Requires enough historical data to compute 12-month returns.',
-          'Uses live market data (Yahoo Finance and/or Stooq).',
+          'Custom tickers need stored price history before they can be used in calculations.',
         ],
       },
     ],
@@ -208,12 +197,6 @@ export const strategyEducationKo = {
           'Lookback Months: 이동평균 계산에 사용하는 과거 데이터 기간',
         ],
       },
-      {
-        heading: '데이터 요구사항',
-        bullets: [
-          '실시간 시세 데이터(Yahoo Finance, Stooq)를 사용합니다. 네트워크 차단이나 호출 제한이 있으면 계산이 실패할 수 있습니다.',
-        ],
-      },
     ],
   },
   vaa: {
@@ -232,13 +215,6 @@ export const strategyEducationKo = {
         bullets: [
           '공격 자산: SPY, EFA, EEM, AGG',
           '방어 자산: LQD, IEF, SHY',
-        ],
-      },
-      {
-        heading: '데이터 요구사항',
-        bullets: [
-          '12개월 수익률 계산이 가능할 만큼 충분한 과거 데이터가 필요합니다.',
-          '실시간 시세 데이터(Yahoo Finance, Stooq)를 사용합니다.',
         ],
       },
     ],

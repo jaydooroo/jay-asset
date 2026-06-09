@@ -158,6 +158,13 @@ const Dashboard = () => {
     setParamValues((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAmountChange = (value) => {
+    const normalized = String(value).replace(/,/g, '');
+    if (/^\d*\.?\d*$/.test(normalized)) {
+      setAmount(normalized);
+    }
+  };
+
   const handleReset = () => {
     setAmount('');
     setResults(null);
@@ -334,9 +341,10 @@ const Dashboard = () => {
               <TextField
                 fullWidth
                 label={t('dashboard.investmentAmount')}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 placeholder={t('dashboard.amountPlaceholder')}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>,

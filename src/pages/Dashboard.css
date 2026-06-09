@@ -4,6 +4,7 @@
   background: var(--app-bg);
   padding: 16px 0 24px;
   overflow-x: clip;
+  overflow-y: visible;
 }
 
 .dashboard-root::before,
@@ -114,7 +115,22 @@
 @media (max-width: 599px) {
   .dashboard-root {
     padding: 12px 0 18px;
-    overflow-x: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .dashboard-content,
+  .dashboard-results-card,
+  .results-grid,
+  .results-scroll {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .results-scroll {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .dashboard-root::before {
