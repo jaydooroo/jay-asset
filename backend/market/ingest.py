@@ -6,7 +6,6 @@ from typing import Iterable
 
 from .config import ingest_provider, ingest_tickers, price_table_name
 from .dynamodb_client import dynamodb_resource
-from .external_provider import ExternalPriceRepository
 
 
 def _log(message: str) -> None:
@@ -23,6 +22,10 @@ def _price_provider():
         from .providers import TiingoPriceRepository
 
         return provider_name, TiingoPriceRepository()
+
+    # Imported lazily: it pulls in yfinance/pandas_datareader, which are dev-only
+    # (requirements-dev.txt) and not packaged into the Lambda.
+    from .external_provider import ExternalPriceRepository
 
     return provider_name, ExternalPriceRepository()
 

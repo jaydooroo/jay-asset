@@ -56,3 +56,6 @@ venv/
 *.egg-info/
 *.tsbuildinfo
 
+
+# AWS SAM
+.aws-sam/

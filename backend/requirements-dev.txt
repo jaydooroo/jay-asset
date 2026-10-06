@@ -1,0 +1,7 @@
+# Local development: runtime deps plus things Lambda provides or does not need.
+#   pip install -r requirements-dev.txt
+-r requirements.txt
+boto3==1.34.34
+# MARKET_PRICE_SOURCE=external / MARKET_INGEST_PROVIDER=external (Stooq/Yahoo downloader)
+yfinance==0.2.38
+pandas_datareader==0.10.0

@@ -1,6 +1,7 @@
 from .paa import PAAPerformanceSpec
 from .vaa import VAAPerformanceSpec
 from .cdm import CDMPerformanceSpec
+from .daa import DAAPerformanceSpec
 
 # Keep in sync with backend/strategies/__init__.py when strategy performance is supported.
 # Checklist: backend/NEW_STRATEGY_CHECKLIST.md
@@ -8,6 +9,7 @@ SPECS = {
     "paa": PAAPerformanceSpec(),
     "vaa": VAAPerformanceSpec(),
     "cdm": CDMPerformanceSpec(),
+    "daa": DAAPerformanceSpec(),
 }
 
 

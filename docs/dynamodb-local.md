@@ -48,13 +48,13 @@ dynamodb-admin -> http://dynamodb-local:8000
 
 ```powershell
 cd backend
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 If you are using the project virtual environment directly:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 ```
 
 ## 3. Create the local price table

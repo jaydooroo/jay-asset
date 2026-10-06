@@ -1,0 +1,18 @@
+# AWS SAM CLI settings. Used by `sam build` / `sam deploy` from the project root.
+# The Tiingo key is NOT stored here; scripts/deploy-backend.ps1 passes it in.
+version = 0.1
+
+[default.global.parameters]
+stack_name = "jay-asset"
+region = "us-east-1"
+
+[default.build.parameters]
+use_container = true
+cached = true
+
+[default.deploy.parameters]
+resolve_s3 = true
+s3_prefix = "jay-asset"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false

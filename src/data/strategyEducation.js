@@ -167,6 +167,43 @@ export const strategyEducation = {
       },
     ],
   },
+  daa: {
+    title: 'DAA (Defensive Asset Allocation)',
+    rebalanceFrequency: 'Monthly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          'Uses two canary assets (VWO, BND) as early-warning signals for market downturns.',
+          'Allocates equally to the top N offensive ETFs when the market is healthy, and shifts to the best defensive bond otherwise.',
+          'Momentum score = 12×R1 + 4×R3 + 2×R6 + 1×R12',
+        ],
+      },
+      {
+        heading: 'Canary signal',
+        bullets: [
+          'Both VWO & BND positive → 100% offensive',
+          'One of VWO / BND positive → 50% offensive, 50% defensive',
+          'Both VWO & BND negative → 0% offensive, 100% defensive',
+        ],
+      },
+      {
+        heading: 'Universe',
+        bullets: [
+          'Offensive (12 ETFs): SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, GLD, DBC, HYG, LQD, TLT',
+          'Defensive (3 ETFs): LQD, IEF, SHY',
+          'Canary: VWO, BND',
+        ],
+      },
+      {
+        heading: 'Historical performance (1973–2021)',
+        bullets: [
+          'CAGR ~14.7%,  MDD ~−12%,  Sharpe 1.12',
+          'Portfolio lost more than 10% only twice in ~50 years.',
+        ],
+      },
+    ],
+  },
 };
 
 export const strategyEducationKo = {
@@ -244,6 +281,43 @@ export const strategyEducationKo = {
           '회사채: LQD vs HYG',
           '부동산: VNQ vs REM',
           '위기대응: TLT vs GLD',
+        ],
+      },
+    ],
+  },
+  daa: {
+    title: 'DAA (방어적 자산 배분)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '카나리아 자산(VWO, BND)의 모멘텀으로 시장 위기를 조기 감지합니다.',
+          '시장이 건강할 때는 상위 N개 공격 ETF에 균등 배분, 위기 신호 시 최고 방어 자산으로 이동합니다.',
+          '모멘텀 점수 = 12×1개월 수익 + 4×3개월 수익 + 2×6개월 수익 + 1×12개월 수익',
+        ],
+      },
+      {
+        heading: '카나리아 신호 체계',
+        bullets: [
+          'VWO, BND 둘 다 양수 → 공격 자산 100%',
+          'VWO 또는 BND 중 하나만 양수 → 공격 자산 50%, 방어 자산 50%',
+          'VWO, BND 둘 다 음수 → 공격 자산 0%, 방어 자산 100%',
+        ],
+      },
+      {
+        heading: '자산군',
+        bullets: [
+          '공격 자산 (12개): SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, GLD, DBC, HYG, LQD, TLT',
+          '방어 자산 (3개): LQD, IEF, SHY',
+          '카나리아: VWO, BND',
+        ],
+      },
+      {
+        heading: '백테스트 성과 (1973–2021)',
+        bullets: [
+          '연복리 수익률 약 14.7%,  최대낙폭 약 −12%,  샤프지수 1.12',
+          '약 50년간 포트폴리오 손실이 10% 이상 난 경우는 단 2번.',
         ],
       },
     ],

@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  jay-asset backend - Flask API on Lambda (Function URL) plus scheduled
+  market-data ingest and monthly performance refresh.
+
+  The three DynamoDB tables already exist and hold data, so this stack only
+  references them by name. It never creates, replaces, or deletes them.
+
+# Note: on redeploys `sam deploy` reuses the previous value of any parameter it
+# is not given, so editing a Default below has no effect on the existing stack.
+# Values that change over time are written directly into the resources instead.
+Parameters:
+  TiingoApiKey:
+    Type: String
+    NoEcho: true
+    Description: Tiingo API key used by the market-data ingest job.
+  PriceTableName:
+    Type: String
+    Default: jay-asset-daily-prices
+  PerformanceTableName:
+    Type: String
+    Default: jay-asset-performance
+  CacheTableName:
+    Type: String
+    Default: jay-asset-cache
+  SchedulesState:
+    Type: String
+    Description: Set DISABLED to pause the ingest/refresh schedules.
+    AllowedValues: [ENABLED, DISABLED]
+    Default: ENABLED
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Architectures: [x86_64]
+    MemorySize: 1024
+    Timeout: 300
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: lambda_handler.handler
+      Environment:
+        Variables:
+          MARKET_PRICE_SOURCE: dynamodb
+          MARKET_PRICE_TABLE: !Ref PriceTableName
+          MARKET_INGEST_PROVIDER: tiingo
+          # Tickers refreshed by the daily ingest job. New tickers also need a
+          # one-time backfill (see docs/deployment.md).
+          MARKET_INGEST_TICKERS: AGG,BIL,BND,DBC,EEM,EFA,EWJ,EWM,EWY,GLD,HYG,IEF,IWM,LQD,QQQ,REM,SHY,SPY,TLT,VGK,VNQ,VWO
+          TIINGO_API_KEY: !Ref TiingoApiKey
+          PERFORMANCE_ENABLED: "true"
+          PERFORMANCE_TABLE: !Ref PerformanceTableName
+          PERFORMANCE_LOOKBACK_DAYS: "252"
+          PERFORMANCE_BACKTEST_MONTHS: "12"
+          PERFORMANCE_TTL_SECONDS: "5184000"
+          CACHE_ENABLED: "true"
+          CACHE_TABLE: !Ref CacheTableName
+          CACHE_TTL_SECONDS: "7200"
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - http://localhost:3000
+            - https://main.d32iz68055zr4k.amplifyapp.com
+            - https://asset.jehyeonlee.net
+          AllowMethods: [GET, POST]
+          AllowHeaders: [content-type]
+          MaxAge: 3600
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PriceTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PerformanceTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CacheTableName
+      Events:
+        # Weekdays 21:00 New York time, after US market close. The job re-reads
+        # the last 14 days, so a missed run is filled in by the next one.
+        DailyMarketIngest:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 21 ? * MON-FRI *)
+            ScheduleExpressionTimezone: America/New_York
+            State: !Ref SchedulesState
+            Input: '{"job": "market_data_ingest", "lookback_days": 14}'
+        # 1st of each month 08:00 New York time.
+        MonthlyPerformanceRefresh:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 8 1 * ? *)
+            ScheduleExpressionTimezone: America/New_York
+            State: !Ref SchedulesState
+            Input: '{"job": "performance_refresh"}'
+
+  ApiFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ApiFunction}
+      RetentionInDays: 30
+
+Outputs:
+  ApiBaseUrl:
+    Description: Put this (with "api" appended) into REACT_APP_API_BASE_URL.
+    Value: !GetAtt ApiFunctionUrl.FunctionUrl
+  FunctionName:
+    Value: !Ref ApiFunction

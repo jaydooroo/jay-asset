@@ -53,6 +53,16 @@ def _canonical_parameters(strategy_id: str, parameters: dict) -> dict:
             except Exception:
                 pass
 
+    if strategy_id == "daa":
+        for key in ("offensive_assets", "defensive_assets", "canary_assets"):
+            if key in normalized:
+                normalized[key] = _normalize_tickers(normalized[key])
+        if isinstance(normalized.get("top_n"), str):
+            try:
+                normalized["top_n"] = int(normalized["top_n"].strip())
+            except Exception:
+                pass
+
     return normalized
 
 
