@@ -1,5 +1,9 @@
+import hashlib
+import inspect
 import json
 from datetime import datetime, timezone
+from functools import lru_cache
+from pathlib import Path
 
 
 def _today_bucket_utc() -> str:
@@ -66,15 +70,31 @@ def _canonical_parameters(strategy_id: str, parameters: dict) -> dict:
     return normalized
 
 
-def cache_key(strategy_id: str, parameters: dict) -> str | None:
-    """Build a stable key from date bucket, strategy id, and canonical parameters."""
+@lru_cache(maxsize=None)
+def _code_version(strategy_cls: type) -> str:
+    """
+    Short hash of the strategy's source files (its class and base classes).
+
+    Deploying changed strategy code changes the hash, so plans cached by the
+    previous code are no longer read.
+    """
+    digest = hashlib.sha256()
+    files = {inspect.getsourcefile(cls) for cls in strategy_cls.__mro__ if cls is not object}
+    for path in sorted(f for f in files if f):
+        digest.update(Path(path).read_bytes())
+    return digest.hexdigest()[:8]
+
+
+def cache_key(strategy_id: str, parameters: dict, strategy=None) -> str | None:
+    """Build a stable key from date bucket, strategy id + code version, and canonical parameters."""
     try:
         params_json = json.dumps(
             _canonical_parameters(strategy_id, parameters),
             sort_keys=True,
             separators=(",", ":"),
         )
+        version = f"@{_code_version(type(strategy))}" if strategy is not None else ""
     except Exception:
         return None
 
-    return f"{_today_bucket_utc()}|{strategy_id}|{params_json}"
+    return f"{_today_bucket_utc()}|{strategy_id}{version}|{params_json}"

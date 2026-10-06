@@ -4,15 +4,14 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 // Simple horizontal bar chart for momentum scores.
 // scores: object mapping ticker -> score (e.g. 0.12 or -0.05)
-const MomentumBarChart = ({ scores, maxBars = 8 }) => {
+const MomentumBarChart = ({ scores }) => {
   const { t } = useLanguage();
   if (!scores) return null;
 
   const entries = Object.entries(scores)
     .map(([ticker, score]) => [ticker, Number(score)])
     .filter(([, score]) => !Number.isNaN(score))
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, maxBars);
+    .sort((a, b) => b[1] - a[1]);
 
   if (entries.length === 0) return null;
 
@@ -55,7 +54,7 @@ const MomentumBarChart = ({ scores, maxBars = 8 }) => {
         );
       })}
       <Typography variant="caption" color="text.secondary">
-        {t('chart.topMomentum', { count: entries.length })}
+        {t('chart.allMomentum', { count: entries.length })}
       </Typography>
     </Box>
   );

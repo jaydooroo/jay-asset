@@ -106,13 +106,14 @@ class PAAStrategy(BaseStrategy):
         offensive_weight_each = (1.0 - ief_weight) / float(top_n) if top_n != 0 else 0.0
 
         weights: Dict[str, float] = {}
-        momentum_data = {}
+        # Scores for every candidate ETF, not just the selected ones, so the UI
+        # can show why the top N were picked.
+        momentum_data = {etf: round(float(momentum[etf]), 4) for etf in available_etfs}
 
         # Allocate to offensive assets
         for etf in selected.index:
             if momentum[etf] >= 0:
                 weights[etf] = float(offensive_weight_each)
-            momentum_data[etf] = round(float(momentum[etf]), 4)
 
         # Add defensive allocation weight
         if ief_weight > 0:

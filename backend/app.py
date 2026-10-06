@@ -72,7 +72,7 @@ def calculate_allocation():
                 'error': f'Strategy {strategy_id} not found'
             }), 404
 
-        ck = cache_key(strategy_id, parameters)
+        ck = cache_key(strategy_id, parameters, strategy)
         if ck:
             cached_plan = cache_get_plan(ck)
             if cached_plan:

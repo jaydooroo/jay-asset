@@ -94,7 +94,7 @@ export const translations = {
     chart: {
       allocation: 'Allocation',
       more: '+{count} more',
-      topMomentum: 'Top {count} momentum scores',
+      allMomentum: 'Momentum scores for all {count} tickers',
     },
     strategies: {
       paa: {
@@ -191,7 +191,7 @@ export const translations = {
     chart: {
       allocation: '배분',
       more: '+{count}개 더',
-      topMomentum: '상위 {count}개 모멘텀 점수',
+      allMomentum: '전체 {count}개 종목 모멘텀 점수',
     },
     strategies: {
       paa: {
