@@ -241,7 +241,7 @@ const Dashboard = () => {
       }
 
       setResults({
-        strategy: result.strategy,
+        strategy: strategy.name,
         description: strategy.description,
         totalAmount,
         breakdown,

@@ -1,5 +1,6 @@
 from .backtest import run_monthly_walkforward_backtest
 from .specs import get_performance_spec, list_performance_spec_ids
+from .config import performance_enabled
 from .store import performance_set_metrics
 
 
@@ -31,6 +32,16 @@ def compute_and_store_for_strategy(strategy_id: str) -> dict:
         "metrics": result.get("metrics", {}),
     }
     saved = performance_set_metrics(strategy_id, payload)
+    if not saved and not performance_enabled():
+        # Local runs keep the performance table untouched: hand the fresh
+        # result back to the caller instead of treating it as a failure.
+        return {
+            "strategy_id": strategy_id,
+            "ok": True,
+            "persisted": False,
+            "payload": payload,
+            "metrics": payload.get("metrics", {}),
+        }
     if not saved:
         return {
             "strategy_id": strategy_id,

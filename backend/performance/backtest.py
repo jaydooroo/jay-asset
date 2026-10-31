@@ -74,7 +74,10 @@ def run_monthly_walkforward_backtest(spec, parameters: dict | None = None) -> di
     # monthly returns. Since `_monthly_prices` intentionally excludes the
     # incomplete current month, fetch an extra month of history so the latest
     # completed-month window still has enough rebalance points.
-    fetch_days = min_lookback_days + (months + 3) * 31 + 45
+    # `min_lookback_days` counts trading days, so convert it to calendar days
+    # (~252 per 365); otherwise runs late in the month leave the first
+    # rebalance point a few trading days short of its lookback.
+    fetch_days = int(min_lookback_days * 365 / 252) + (months + 3) * 31 + 45
 
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=fetch_days)
