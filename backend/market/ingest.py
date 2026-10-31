@@ -4,8 +4,9 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Iterable
 
-from .config import ingest_provider, ingest_tickers, price_table_name
+from .config import ingest_tickers, price_table_name
 from .dynamodb_client import dynamodb_resource
+from .providers import TiingoPriceRepository
 
 
 def _log(message: str) -> None:
@@ -16,23 +17,9 @@ def _normalize_tickers(tickers: Iterable[str]) -> list[str]:
     return sorted(dict.fromkeys(str(ticker).strip().upper() for ticker in tickers if str(ticker).strip()))
 
 
-def _price_provider():
-    provider_name = ingest_provider()
-    if provider_name == "tiingo":
-        from .providers import TiingoPriceRepository
-
-        return provider_name, TiingoPriceRepository()
-
-    # Imported lazily: it pulls in yfinance/pandas_datareader, which are dev-only
-    # (requirements-dev.txt) and not packaged into the Lambda.
-    from .external_provider import ExternalPriceRepository
-
-    return provider_name, ExternalPriceRepository()
-
-
 def run_dynamodb_price_ingest(tickers: Iterable[str] | None = None, lookback_days: int = 7) -> dict:
     """
-    Download recent daily closes from the external provider and upsert them into DynamoDB.
+    Download recent daily closes from Tiingo and upsert them into DynamoDB.
 
     This is intentionally small and scheduler-friendly. Initial backfills can call the
     same function with a larger lookback window, while the daily EventBridge job can
@@ -48,7 +35,7 @@ def run_dynamodb_price_ingest(tickers: Iterable[str] | None = None, lookback_day
     end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=max(1, int(lookback_days)))
 
-    provider_name, provider = _price_provider()
+    provider_name, provider = "tiingo", TiingoPriceRepository()
     _log(
         "Starting price ingest "
         f"provider={provider_name} "

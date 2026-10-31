@@ -54,7 +54,7 @@ def _synthetic_close(ticker: str, index: int, total: int) -> float:
     Produce deterministic but non-flat sample prices.
 
     These are not real prices. They only exist to test the DynamoDB-backed
-    strategy pipeline when external providers are unavailable.
+    strategy pipeline without a Tiingo API key.
     """
     seed = sum(ord(ch) for ch in ticker)
     base = 60.0 + (seed % 180)

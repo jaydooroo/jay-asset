@@ -3,28 +3,6 @@ from __future__ import annotations
 import os
 
 
-def price_source() -> str:
-    """
-    Select the runtime price source.
-
-    Supported values:
-      - external: current Stooq/Yahoo downloader
-      - dynamodb: DynamoDB-backed historical close prices
-    """
-    return os.getenv("MARKET_PRICE_SOURCE", "external").strip().lower() or "external"
-
-
-def ingest_provider() -> str:
-    """
-    Select the provider used by market-data ingestion jobs.
-
-    Supported values:
-      - external: current Stooq/Yahoo downloader
-      - tiingo: Tiingo EOD API
-    """
-    return os.getenv("MARKET_INGEST_PROVIDER", "external").strip().lower() or "external"
-
-
 def tiingo_api_key() -> str | None:
     value = os.getenv("TIINGO_API_KEY", "").strip()
     return value or None

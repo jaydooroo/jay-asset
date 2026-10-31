@@ -70,7 +70,7 @@ aws cloudformation describe-stacks --stack-name jay-asset --query "Stacks[0].Out
 ### 의존성 관리
 
 - [backend/requirements.txt](../backend/requirements.txt): **Lambda에 들어가는 패키지만** 적습니다. boto3는 Lambda 런타임에 이미 들어 있어서 넣지 않습니다.
-- [backend/requirements-dev.txt](../backend/requirements-dev.txt): 로컬 개발용입니다(boto3, yfinance, pandas_datareader 포함). 로컬에서는 `pip install -r requirements-dev.txt`로 설치합니다.
+- [backend/requirements-dev.txt](../backend/requirements-dev.txt): 로컬 개발용입니다(boto3 포함). 로컬에서는 `pip install -r requirements-dev.txt`로 설치합니다.
 - `backend/` 안에 `lambda_build/`, `lambda_pkg/`, `deployment*.zip` 같은 예전 빌드 결과물이 있으면 패키지 크기 제한(250MB)을 넘기 때문에, 스크립트가 배포 전에 멈춥니다. 지우고 다시 실행합니다.
 
 ## 프론트엔드 배포

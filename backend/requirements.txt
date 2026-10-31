@@ -1,6 +1,6 @@
 # Runtime dependencies packaged into the Lambda by `sam build`.
 # boto3 is not listed: the Lambda Python runtime already provides it.
-# Local-only extras (boto3, yfinance, pandas_datareader) live in requirements-dev.txt.
+# Local-only extras (boto3) live in requirements-dev.txt.
 flask==3.0.0
 flask-cors==4.0.0
 aws-wsgi==0.2.7

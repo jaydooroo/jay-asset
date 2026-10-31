@@ -45,9 +45,7 @@ Resources:
       Handler: lambda_handler.handler
       Environment:
         Variables:
-          MARKET_PRICE_SOURCE: dynamodb
           MARKET_PRICE_TABLE: !Ref PriceTableName
-          MARKET_INGEST_PROVIDER: tiingo
           # Tickers refreshed by the daily ingest job. New tickers also need a
           # one-time backfill (see docs/deployment.md).
           MARKET_INGEST_TICKERS: AGG,BIL,BND,DBC,EEM,EFA,EWJ,EWM,EWY,GLD,HYG,IEF,IWD,IWM,LQD,QQQ,REM,SHY,SPY,TLT,VBR,VGK,VNQ,VWO

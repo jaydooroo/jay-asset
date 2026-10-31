@@ -27,7 +27,7 @@ class TiingoPriceRepository(PriceRepository):
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or tiingo_api_key()
         if not self.api_key:
-            raise RuntimeError("TIINGO_API_KEY is required when MARKET_INGEST_PROVIDER=tiingo")
+            raise RuntimeError("TIINGO_API_KEY is required for market data ingest")
 
     def get_close_prices(
         self,

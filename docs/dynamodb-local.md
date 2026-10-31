@@ -67,46 +67,27 @@ $env:AWS_DEFAULT_REGION="us-east-1"
 .\.venv\Scripts\python.exe scripts/create_market_price_table.py
 ```
 
-## 4. Ingest sample data
+## 4. Ingest prices from Tiingo
 
-Preferred when the external providers are working:
+Prices always come from Tiingo. Set your API token and ingest the default
+strategy tickers:
 
 ```powershell
-$env:MARKET_INGEST_TICKERS="SPY,QQQ,IWM,VGK,EWJ,EEM,VNQ,GLD,DBC,HYG,LQD,IEF"
+$env:TIINGO_API_KEY="your_token_here"
 
-.\.venv\Scripts\python.exe scripts/ingest_market_prices.py --lookback-days 900
+.\.venv\Scripts\python.exe scripts/ingest_market_prices.py --tickers AGG,BIL,BND,DBC,EEM,EFA,EWJ,EWM,EWY,GLD,HYG,IEF,IWD,IWM,LQD,QQQ,REM,SHY,SPY,TLT,VBR,VGK,VNQ,VWO --lookback-days 900
 ```
 
-The ingest script still calls the external market providers. Local DynamoDB only
-replaces the storage layer.
+Rows written through this path use `source = tiingo`.
 
-If Stooq/Yahoo are unavailable, seed deterministic fake prices instead so you
-can still test the DynamoDB-backed application flow:
+Without a Tiingo token, seed deterministic fake prices instead so you can still
+test the application flow:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/seed_sample_market_prices.py --trading-days 756
 ```
 
 Seeded rows use `source = sample` and are not real market prices.
-
-## Tiingo ingest
-
-If Yahoo/Stooq are unavailable, use Tiingo with an API token:
-
-```powershell
-$env:MARKET_INGEST_PROVIDER="tiingo"
-$env:TIINGO_API_KEY="your_token_here"
-
-.\.venv\Scripts\python.exe scripts/ingest_market_prices.py --tickers SPY --lookback-days 30
-```
-
-For all default strategy tickers:
-
-```powershell
-.\.venv\Scripts\python.exe scripts/ingest_market_prices.py --tickers SPY,QQQ,IWM,VGK,EWJ,EEM,VNQ,GLD,DBC,HYG,LQD,IEF,EFA,AGG,SHY,REM,TLT,BIL --lookback-days 900
-```
-
-Rows written through this path use `source = tiingo`.
 
 ## Inspect stored market prices
 
@@ -128,10 +109,11 @@ Show latest raw items too:
 .\.venv\Scripts\python.exe scripts/inspect_market_prices.py --tickers SPY --sample-limit 3
 ```
 
-## 5. Run the backend using DynamoDB as price source
+## 5. Run the backend against DynamoDB Local
+
+The backend always reads prices from DynamoDB; the endpoint decides which one.
 
 ```powershell
-$env:MARKET_PRICE_SOURCE="dynamodb"
 $env:MARKET_DYNAMODB_ENDPOINT_URL="http://localhost:8000"
 $env:MARKET_PRICE_TABLE="jay-asset-daily-prices"
 $env:AWS_DEFAULT_REGION="us-east-1"
@@ -139,18 +121,12 @@ $env:AWS_DEFAULT_REGION="us-east-1"
 .\.venv\Scripts\python.exe app.py
 ```
 
-Now `/api/calculate` reads historical prices from DynamoDB Local instead of
-calling Yahoo/Stooq during the user request.
+To read the real AWS table instead (no Docker needed), load your AWS settings
+with `.\scripts\load-backend-env.ps1` from the project root and leave
+`MARKET_DYNAMODB_ENDPOINT_URL` unset.
 
 ## AWS deployment difference
 
-In AWS, do **not** set `MARKET_DYNAMODB_ENDPOINT_URL`.
-
-Use:
-
-```text
-MARKET_PRICE_SOURCE=dynamodb
-MARKET_PRICE_TABLE=jay-asset-daily-prices
-```
-
-and grant the Lambda role permission to read/write that DynamoDB table.
+In AWS, do **not** set `MARKET_DYNAMODB_ENDPOINT_URL`. Set
+`MARKET_PRICE_TABLE=jay-asset-daily-prices` and grant the Lambda role
+permission to read/write that DynamoDB table (see `template.yaml`).

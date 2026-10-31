@@ -62,9 +62,8 @@ class PAAStrategy(BaseStrategy):
             if price_data.empty:
                 return {
                     'error': (
-                        'No valid price data was returned by the market data providers. '
-                        'In AWS this usually means outbound internet access is blocked '
-                        'or Yahoo Finance/Stooq returned empty data.'
+                        'No stored price data was found for these tickers. '
+                        'Add them to MARKET_INGEST_TICKERS and backfill them from Tiingo.'
                     ),
                     'missing_tickers': failed_tickers or list(all_tickers),
                 }

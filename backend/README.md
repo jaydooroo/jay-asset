@@ -18,9 +18,16 @@ pip install -r requirements-dev.txt
 
 ## Running the Backend
 
-```bash
+Strategies read daily prices from DynamoDB, which the scheduled ingest job fills
+from Tiingo. Locally, point the backend at the AWS table (from the project root):
+
+```powershell
+.\scripts\load-backend-env.ps1
+cd backend
 python app.py
 ```
+
+or at DynamoDB Local (see [docs/dynamodb-local.md](../docs/dynamodb-local.md)).
 
 The backend will run on `http://localhost:5000`
 
