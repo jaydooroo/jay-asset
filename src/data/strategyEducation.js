@@ -204,6 +204,142 @@ export const strategyEducation = {
       },
     ],
   },
+  gem: {
+    title: 'GEM (Dual Momentum)',
+    rebalanceFrequency: 'Monthly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          "Gary Antonacci's Global Equities Momentum. Holds 100% in a single asset each month.",
+          'Absolute momentum: if SPY beat cash (BIL) over 12 months, stay in stocks; otherwise move to bonds (AGG).',
+          'Relative momentum: when in stocks, pick the stronger of US (SPY) and international (EFA).',
+        ],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: [
+          'Very simple and avoids long bear markets, but holding one asset means big swings.',
+          'Can lag after sharp V-shaped recoveries because the 12-month signal reacts slowly.',
+        ],
+      },
+    ],
+  },
+  gtaa: {
+    title: 'GTAA (Faber Trend Following)',
+    rebalanceFrequency: 'Monthly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          "Mebane Faber's timing model: 20% each in US stocks (SPY), international stocks (EFA), Treasuries (IEF), commodities (DBC) and REITs (VNQ).",
+          'At each month-end, a slice holds its asset only if the price is above its 10-month moving average; otherwise that slice goes to cash (BIL).',
+        ],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: [
+          'Cuts drawdowns in long declines while keeping most of the upside.',
+          'In choppy sideways markets it can switch in and out and lose a little each time.',
+        ],
+      },
+    ],
+  },
+  laa: {
+    title: 'LAA (Lethargic Asset Allocation)',
+    rebalanceFrequency: 'Monthly (changes rarely)',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          '75% stays fixed: 25% each in large-cap value (IWD), gold (GLD) and 7-10y Treasuries (IEF).',
+          'The last 25% holds Nasdaq (QQQ) while the S&P 500 is above its 200-day moving average, and short Treasuries (SHY) otherwise.',
+        ],
+      },
+      {
+        heading: 'Simplified version',
+        bullets: [
+          "Wouter Keller's original switches to SHY only when the price signal AND rising US unemployment agree.",
+          'This app does not store unemployment data, so it uses the price signal alone and may switch to SHY more often.',
+        ],
+      },
+    ],
+  },
+  sixty_forty: {
+    title: '60/40 Portfolio',
+    rebalanceFrequency: 'Yearly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          '60% US stocks (SPY), 40% US investment-grade bonds (AGG).',
+          'Once a year, sell what grew and buy what shrank to get back to 60/40.',
+        ],
+      },
+      {
+        heading: 'Good for',
+        bullets: ['Investors who want one simple, widely used benchmark portfolio.'],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: ['Stocks and bonds can fall together when inflation rises (as in 2022).'],
+      },
+    ],
+  },
+  permanent: {
+    title: 'Permanent Portfolio',
+    rebalanceFrequency: 'Yearly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          "Harry Browne's portfolio: 25% each in stocks (SPY), long-term Treasuries (TLT), gold (GLD) and cash (BIL).",
+          'Each asset is meant to do well in a different economy: growth, deflation, inflation and recession.',
+        ],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: [
+          'Small drawdowns and a calm ride, but lower long-term returns than stock-heavy portfolios.',
+        ],
+      },
+    ],
+  },
+  all_weather: {
+    title: 'All Weather Portfolio',
+    rebalanceFrequency: 'Yearly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          "Popular simplified version of Ray Dalio's risk-parity idea.",
+          'Stocks 30% (SPY), long Treasuries 40% (TLT), intermediate Treasuries 15% (IEF), gold 7.5% (GLD), commodities 7.5% (DBC).',
+          'Heavy bond weight balances the risk of the stock slice.',
+        ],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: ['Sensitive to rising interest rates because of the large long-bond weight.'],
+      },
+    ],
+  },
+  golden_butterfly: {
+    title: 'Golden Butterfly',
+    rebalanceFrequency: 'Yearly',
+    sections: [
+      {
+        heading: 'What it does',
+        bullets: [
+          '20% each in large-cap stocks (SPY), small-cap value (VBR), long Treasuries (TLT), short Treasuries (SHY) and gold (GLD).',
+          'A Permanent Portfolio variant with more stocks for extra growth.',
+        ],
+      },
+      {
+        heading: 'Trade-offs',
+        bullets: ['Usually more growth than the Permanent Portfolio, with slightly deeper drawdowns.'],
+      },
+    ],
+  },
 };
 
 export const strategyEducationKo = {
@@ -319,6 +455,140 @@ export const strategyEducationKo = {
           '연복리 수익률 약 14.7%,  최대낙폭 약 −12%,  샤프지수 1.12',
           '약 50년간 포트폴리오 손실이 10% 이상 난 경우는 단 2번.',
         ],
+      },
+    ],
+  },
+  gem: {
+    title: 'GEM (듀얼 모멘텀)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '게리 안토나치의 글로벌 주식 모멘텀 전략입니다. 매달 한 자산에 100% 투자합니다.',
+          '절대 모멘텀: 최근 12개월 동안 SPY가 현금(BIL)보다 많이 올랐으면 주식, 아니면 채권(AGG)을 보유합니다.',
+          '상대 모멘텀: 주식을 보유할 때는 미국(SPY)과 해외(EFA) 중 더 강한 쪽을 고릅니다.',
+        ],
+      },
+      {
+        heading: '장단점',
+        bullets: [
+          '규칙이 아주 단순하고 긴 하락장을 피할 수 있지만, 한 자산만 보유해서 등락 폭이 큽니다.',
+          '12개월 신호라 반응이 느려서, 급락 후 급반등하는 장에서는 뒤처질 수 있습니다.',
+        ],
+      },
+    ],
+  },
+  gtaa: {
+    title: 'GTAA (파버 추세추종)',
+    rebalanceFrequency: '월간',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '메브 파버의 타이밍 모델입니다. 미국 주식(SPY), 해외 주식(EFA), 국채(IEF), 원자재(DBC), 리츠(VNQ)에 20%씩 나눕니다.',
+          '매월 말, 각 자산의 가격이 10개월 이동평균보다 높으면 보유하고, 낮으면 그 몫은 현금(BIL)으로 바꿉니다.',
+        ],
+      },
+      {
+        heading: '장단점',
+        bullets: [
+          '긴 하락장에서 손실을 크게 줄이면서 상승장 수익은 대부분 가져갑니다.',
+          '횡보장에서는 들어갔다 나왔다를 반복하며 조금씩 손해를 볼 수 있습니다.',
+        ],
+      },
+    ],
+  },
+  laa: {
+    title: 'LAA (게으른 자산배분)',
+    rebalanceFrequency: '월간 (거의 바뀌지 않음)',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '75%는 고정입니다: 미국 대형 가치주(IWD), 금(GLD), 7~10년 국채(IEF)에 25%씩.',
+          '나머지 25%는 S&P500이 200일 이동평균 위에 있으면 나스닥(QQQ), 아래면 단기 국채(SHY)를 보유합니다.',
+        ],
+      },
+      {
+        heading: '단순화 버전',
+        bullets: [
+          '원래 켈러의 전략은 가격 신호와 함께 미국 실업률이 오를 때만 SHY로 바꿉니다.',
+          '이 앱에는 실업률 데이터가 없어서 가격 신호만 사용합니다. 그래서 원래보다 SHY로 더 자주 바뀔 수 있습니다.',
+        ],
+      },
+    ],
+  },
+  sixty_forty: {
+    title: '60/40 포트폴리오',
+    rebalanceFrequency: '연 1회',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '미국 주식(SPY) 60%, 미국 우량 채권(AGG) 40%.',
+          '1년에 한 번, 많이 오른 쪽을 팔고 덜 오른 쪽을 사서 60:40으로 되돌립니다.',
+        ],
+      },
+      {
+        heading: '이런 분께 맞습니다',
+        bullets: ['가장 널리 쓰이는 단순한 기본 포트폴리오를 원하는 분.'],
+      },
+      {
+        heading: '장단점',
+        bullets: ['물가가 오를 때는(2022년처럼) 주식과 채권이 함께 떨어질 수 있습니다.'],
+      },
+    ],
+  },
+  permanent: {
+    title: '영구 포트폴리오',
+    rebalanceFrequency: '연 1회',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '해리 브라운의 포트폴리오: 주식(SPY), 장기 국채(TLT), 금(GLD), 현금(BIL)에 25%씩.',
+          '경기 호황, 디플레이션, 인플레이션, 불황 중 어떤 상황에서도 하나는 잘 버티도록 설계됐습니다.',
+        ],
+      },
+      {
+        heading: '장단점',
+        bullets: ['낙폭이 작고 마음이 편하지만, 주식 비중이 높은 포트폴리오보다 장기 수익률은 낮습니다.'],
+      },
+    ],
+  },
+  all_weather: {
+    title: '올웨더 포트폴리오',
+    rebalanceFrequency: '연 1회',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '레이 달리오의 위험 균형 아이디어를 단순하게 만든 대중적인 버전입니다.',
+          '주식 30%(SPY), 장기 국채 40%(TLT), 중기 국채 15%(IEF), 금 7.5%(GLD), 원자재 7.5%(DBC).',
+          '채권 비중을 크게 둬서 주식의 위험과 균형을 맞춥니다.',
+        ],
+      },
+      {
+        heading: '장단점',
+        bullets: ['장기 채권 비중이 커서 금리가 오를 때 약합니다.'],
+      },
+    ],
+  },
+  golden_butterfly: {
+    title: '골든 버터플라이',
+    rebalanceFrequency: '연 1회',
+    sections: [
+      {
+        heading: '무엇을 하는 전략인가',
+        bullets: [
+          '대형주(SPY), 소형 가치주(VBR), 장기 국채(TLT), 단기 국채(SHY), 금(GLD)에 20%씩.',
+          '영구 포트폴리오에 주식을 더 넣어 성장성을 높인 변형입니다.',
+        ],
+      },
+      {
+        heading: '장단점',
+        bullets: ['보통 영구 포트폴리오보다 수익은 높고, 낙폭은 조금 더 큽니다.'],
       },
     ],
   },

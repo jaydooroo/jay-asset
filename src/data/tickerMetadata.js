@@ -89,6 +89,30 @@ const METADATA = {
     market: 'United States',
     role: 'Defensive',
   },
+  TLT: {
+    name: 'iShares 20+ Year Treasury Bond ETF',
+    assetType: 'Long-Term US Treasuries',
+    market: 'United States',
+    role: 'Defensive',
+  },
+  BIL: {
+    name: 'SPDR Bloomberg 1-3 Month T-Bill ETF',
+    assetType: 'Cash Equivalent (T-Bills)',
+    market: 'United States',
+    role: 'Defensive',
+  },
+  VBR: {
+    name: 'Vanguard Small-Cap Value ETF',
+    assetType: 'US Small-Cap Value Equity',
+    market: 'United States',
+    role: 'Offensive',
+  },
+  IWD: {
+    name: 'iShares Russell 1000 Value ETF',
+    assetType: 'US Large-Cap Value Equity',
+    market: 'United States',
+    role: 'Offensive',
+  },
 };
 
 export const getTickerMetadata = (ticker) => {

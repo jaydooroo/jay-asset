@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
+from strategies.static_allocation import STATIC_PORTFOLIOS, parse_weights
+
 
 def _today_bucket_utc() -> str:
     """Return today's UTC date bucket so cache keys rotate daily."""
@@ -64,6 +66,20 @@ def _canonical_parameters(strategy_id: str, parameters: dict) -> dict:
         if isinstance(normalized.get("top_n"), str):
             try:
                 normalized["top_n"] = int(normalized["top_n"].strip())
+            except Exception:
+                pass
+
+    if strategy_id in STATIC_PORTFOLIOS and "weights" in normalized:
+        # "SPY:60,AGG:40" and {"AGG": 4, "SPY": 6} are the same portfolio.
+        normalized["weights"] = parse_weights(normalized["weights"]) or normalized["weights"]
+
+    if strategy_id == "gtaa" and "risk_assets" in normalized:
+        normalized["risk_assets"] = _normalize_tickers(normalized["risk_assets"])
+
+    for key in ("lookback_months", "sma_months"):
+        if strategy_id in ("gem", "gtaa") and key in normalized:
+            try:
+                normalized[key] = int(float(str(normalized[key]).strip()))
             except Exception:
                 pass
 

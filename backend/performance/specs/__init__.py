@@ -2,6 +2,8 @@ from .paa import PAAPerformanceSpec
 from .vaa import VAAPerformanceSpec
 from .cdm import CDMPerformanceSpec
 from .daa import DAAPerformanceSpec
+from .static import build_static_specs
+from .tactical import GEMPerformanceSpec, GTAAPerformanceSpec, LAAPerformanceSpec
 
 # Keep in sync with backend/strategies/__init__.py when strategy performance is supported.
 # Checklist: backend/NEW_STRATEGY_CHECKLIST.md
@@ -10,6 +12,10 @@ SPECS = {
     "vaa": VAAPerformanceSpec(),
     "cdm": CDMPerformanceSpec(),
     "daa": DAAPerformanceSpec(),
+    "gem": GEMPerformanceSpec(),
+    "gtaa": GTAAPerformanceSpec(),
+    "laa": LAAPerformanceSpec(),
+    **build_static_specs(),
 }
 
 

@@ -4,6 +4,9 @@ from typing import Any, Dict, List
 class BaseStrategy(ABC):
     """Base class for all investment strategies"""
 
+    # "tactical" (signal-driven, rebalanced monthly) or "static" (fixed weights).
+    category = "tactical"
+
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
@@ -91,11 +94,12 @@ class BaseStrategy(ABC):
         Convert strategy info to a dictionary for the API response.
 
         The frontend uses this to:
-        - populate the strategy dropdown (name/description)
+        - populate the strategy dropdown (name/description, grouped by category)
         - render parameter input fields (parameters)
         """
         return {
             'name': self.name,
             'description': self.description,
+            'category': self.category,
             'parameters': self.get_parameters()
         }

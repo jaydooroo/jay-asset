@@ -13,6 +13,7 @@ import {
   Grid,
   InputAdornment,
   InputLabel,
+  ListSubheader,
   MenuItem,
   Paper,
   Select,
@@ -98,6 +99,18 @@ const Dashboard = () => {
   const strategyEntries = useMemo(
     () => Object.entries(strategies).sort((a, b) => String(a[1].name).localeCompare(String(b[1].name))),
     [strategies]
+  );
+
+  // Static (set-and-forget) portfolios first, then signal-driven ones.
+  const strategyGroups = useMemo(
+    () =>
+      ['static', 'tactical']
+        .map((key) => ({
+          key,
+          entries: strategyEntries.filter(([, s]) => (s.category === 'static' ? 'static' : 'tactical') === key),
+        }))
+        .filter((group) => group.entries.length > 0),
+    [strategyEntries]
   );
 
   useEffect(() => {
@@ -329,11 +342,14 @@ const Dashboard = () => {
                     },
                   }}
                 >
-                  {strategyEntries.map(([id, strategy]) => (
-                    <MenuItem key={id} value={id}>
-                      {strategy.name}
-                    </MenuItem>
-                  ))}
+                  {strategyGroups.flatMap(({ key, entries }) => [
+                    <ListSubheader key={`group-${key}`}>{t(`dashboard.strategyGroup.${key}`)}</ListSubheader>,
+                    ...entries.map(([id, strategy]) => (
+                      <MenuItem key={id} value={id}>
+                        {strategy.name}
+                      </MenuItem>
+                    )),
+                  ])}
                 </Select>
               </FormControl>
             </Grid>

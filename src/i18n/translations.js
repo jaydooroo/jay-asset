@@ -584,6 +584,42 @@ translations.en.strategies = {
     description:
       'Divides capital across four sleeves and selects the stronger 12-month asset in each sleeve, with a cash filter.',
   },
+  gem: {
+    name: 'GEM (Dual Momentum)',
+    description:
+      'Holds one asset: the stronger of US or international stocks while stocks beat cash, otherwise bonds.',
+  },
+  gtaa: {
+    name: 'GTAA (Faber Trend Following)',
+    description:
+      'Equal slices across five asset classes; each slice holds its asset only above the 10-month moving average.',
+  },
+  laa: {
+    name: 'LAA (Lethargic Asset Allocation)',
+    description:
+      '75% fixed in value stocks, gold and Treasuries; the last 25% switches between Nasdaq and short bonds.',
+  },
+  sixty_forty: {
+    name: '60/40 Portfolio',
+    description: 'Classic balanced portfolio: 60% US stocks, 40% US bonds. Rebalance once a year.',
+  },
+  permanent: {
+    name: 'Permanent Portfolio',
+    description: 'Equal parts stocks, long-term Treasuries, gold and cash. Rebalance once a year.',
+  },
+  all_weather: {
+    name: 'All Weather Portfolio',
+    description: 'Simplified risk-balanced mix: 30% stocks, 55% Treasuries, 7.5% gold, 7.5% commodities.',
+  },
+  golden_butterfly: {
+    name: 'Golden Butterfly',
+    description: 'Equal parts large-cap stocks, small-cap value, long and short Treasuries, and gold.',
+  },
+};
+
+translations.en.dashboard.strategyGroup = {
+  static: 'Static allocation (set and forget)',
+  tactical: 'Tactical momentum (monthly)',
 };
 
 translations.ko.strategies = {
@@ -593,4 +629,40 @@ translations.ko.strategies = {
     description:
       '포트폴리오를 4개 파트로 나누고 각 파트에서 12개월 수익률이 더 높은 자산을 선택하며, 현금 필터를 적용합니다.',
   },
+  gem: {
+    name: 'GEM (듀얼 모멘텀)',
+    description:
+      '한 번에 한 자산만 보유합니다. 주식이 현금보다 강하면 미국·해외 주식 중 더 강한 쪽을, 아니면 채권을 보유합니다.',
+  },
+  gtaa: {
+    name: 'GTAA (파버 추세추종)',
+    description:
+      '5개 자산군에 똑같이 나누고, 각 자산이 10개월 이동평균 위에 있을 때만 보유하고 아래면 현금으로 바꿉니다.',
+  },
+  laa: {
+    name: 'LAA (게으른 자산배분)',
+    description:
+      '75%는 가치주·금·국채에 고정하고, 나머지 25%만 나스닥과 단기채 사이를 오갑니다.',
+  },
+  sixty_forty: {
+    name: '60/40 포트폴리오',
+    description: '미국 주식 60%, 미국 채권 40%의 기본 분산 포트폴리오입니다. 1년에 한 번 비율을 맞춥니다.',
+  },
+  permanent: {
+    name: '영구 포트폴리오',
+    description: '주식, 장기 국채, 금, 현금에 25%씩 나눕니다. 1년에 한 번 비율을 맞춥니다.',
+  },
+  all_weather: {
+    name: '올웨더 포트폴리오',
+    description: '단순화한 위험 균형 포트폴리오: 주식 30%, 국채 55%, 금 7.5%, 원자재 7.5%.',
+  },
+  golden_butterfly: {
+    name: '골든 버터플라이',
+    description: '대형주, 소형 가치주, 장기 국채, 단기 국채, 금에 20%씩 나눕니다.',
+  },
+};
+
+translations.ko.dashboard.strategyGroup = {
+  static: '정적 자산배분 (사놓고 연 1회 조정)',
+  tactical: '전술 모멘텀 (매월 조정)',
 };

@@ -2,6 +2,11 @@
 
 Use this checklist every time you add a strategy (for example: `cdm`).
 
+Fixed-weight portfolios (60/40, Permanent, ...) are shortcuts: add an entry to
+`STATIC_PORTFOLIOS` in `backend/strategies/static_allocation.py` and the runtime
+strategy, performance spec and cache-key handling come with it. Only steps 6
+(education + translations) and new-ticker ingestion still apply.
+
 ## 1) Backend runtime strategy
 
 1. Create `backend/strategies/<strategy>_strategy.py`.
