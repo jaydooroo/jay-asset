@@ -18,6 +18,12 @@ class PAAStrategy(BaseStrategy):
         self.default_etfs = ['SPY', 'QQQ', 'IWM', 'VGK', 'EWJ', 'EEM', 'VNQ', 'GLD', 'DBC', 'HYG', 'LQD']
         self.fallback_asset = 'IEF'
 
+    @staticmethod
+    def _normalize_tickers(value) -> list:
+        """Accept "SPY,QQQ" (form text) or ["SPY", "QQQ"]; return uppercase tickers."""
+        parts = value.split(',') if isinstance(value, str) else (value or [])
+        return [str(p).strip().upper() for p in parts if str(p).strip()]
+
     def calculate_ief_ratio(self, num_negative_momentum: int) -> float:
         """Calculate defensive asset ratio based on negative momentum count"""
         lookup = {
@@ -43,13 +49,20 @@ class PAAStrategy(BaseStrategy):
         Returns:
             Dictionary with allocation plan details (weights + metadata)
         """
-        etfs = kwargs.get('etfs', self.default_etfs)
-        top_n = kwargs.get('top_n', 6)
-        lookback_months = kwargs.get('lookback_months', 12)
+        etfs = self._normalize_tickers(kwargs.get('etfs', self.default_etfs)) or list(self.default_etfs)
+        try:
+            top_n = max(1, int(float(kwargs.get('top_n', 6))))
+            lookback_months = max(1, int(float(kwargs.get('lookback_months', 12))))
+        except (TypeError, ValueError):
+            return {'error': 'top_n and lookback_months must be numbers'}
 
-        all_tickers = etfs + [self.fallback_asset]
+        # Momentum compares the price with its average over the lookback
+        # (12 months = 252 trading days). Download enough calendar days to
+        # cover that many trading days, plus a margin for holidays.
+        window = lookback_months * 21
+        all_tickers = list(dict.fromkeys(etfs + [self.fallback_asset]))
         end_date = datetime.today()
-        start_date = end_date - timedelta(days=lookback_months * 30 + 30)
+        start_date = end_date - timedelta(days=int(window * 365 / 252) + 45)
 
         try:
             price_repository = get_price_repository()
@@ -68,14 +81,14 @@ class PAAStrategy(BaseStrategy):
                     'missing_tickers': failed_tickers or list(all_tickers),
                 }
 
-            if len(price_data) < 252:
-                return {'error': f'Insufficient data: need at least 252 days, got {len(price_data)} days'}
+            if len(price_data) < window:
+                return {'error': f'Insufficient data: need at least {window} days, got {len(price_data)} days'}
 
         except Exception as e:
             return {'error': f'Failed to download data: {str(e)}'}
 
-        # Calculate 12-month simple moving average
-        rolling_avg = price_data.rolling(window=252).mean().iloc[-1]
+        # Simple moving average over the lookback window
+        rolling_avg = price_data.rolling(window=window).mean().iloc[-1]
         current_price = price_data.iloc[-1]
         momentum = (current_price / rolling_avg) - 1
         momentum = momentum.dropna()

@@ -80,11 +80,13 @@ class PAAPerformanceSpec(StrategyPerformanceSpec):
         if history is None or history.empty:
             return {"error": "No historical data"}
 
-        # Use a 12M moving average (252 trading days), same as runtime strategy logic.
-        if len(history) < 252:
-            return {"error": f"Insufficient data: need at least 252 days, got {len(history)}"}
+        # Moving average over the lookback (12 months = 252 trading days),
+        # same as the runtime strategy.
+        window = int(params.get("lookback_months", 12)) * 21
+        if len(history) < window:
+            return {"error": f"Insufficient data: need at least {window} days, got {len(history)}"}
 
-        rolling_avg = history.rolling(window=252).mean().iloc[-1]
+        rolling_avg = history.rolling(window=window).mean().iloc[-1]
         current_price = history.iloc[-1]
         momentum = (current_price / rolling_avg) - 1.0
         momentum = momentum.dropna()
