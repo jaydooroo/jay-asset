@@ -44,8 +44,6 @@ export const translations = {
       errorSelectStrategy: 'Please select a strategy',
       performanceTitle: 'Historical Performance',
       performanceSubtitle: 'Monthly walk-forward backtest summary',
-      refreshPerformance: 'Refresh',
-      refreshingPerformance: 'Refreshing...',
       performanceUnavailable: 'Performance data is unavailable right now.',
       perfReturn: 'Return {value}',
       perfCagr: 'CAGR {value}',
@@ -579,6 +577,11 @@ translations.ko.table = {
 
 translations.en.strategies = {
   ...(translations.en.strategies || {}),
+  daa: {
+    name: 'DAA (Defensive Asset Allocation)',
+    description:
+      'Watches two canary assets (VWO, BND): holds the top offensive ETFs while both are healthy and moves to the best defensive bond as they weaken.',
+  },
   cdm: {
     name: 'CDM (Composite Dual Momentum)',
     description:
@@ -624,6 +627,11 @@ translations.en.dashboard.strategyGroup = {
 
 translations.ko.strategies = {
   ...(translations.ko.strategies || {}),
+  daa: {
+    name: 'DAA (방어적 자산 배분)',
+    description:
+      '카나리아 자산(VWO, BND)을 지켜보다가 둘 다 건강하면 모멘텀 상위 공격 ETF에, 약해질수록 가장 강한 방어 채권에 투자합니다.',
+  },
   cdm: {
     name: 'CDM (종합 듀얼 모멘텀)',
     description:

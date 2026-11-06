@@ -113,6 +113,24 @@ const METADATA = {
     market: 'United States',
     role: 'Offensive',
   },
+  REM: {
+    name: 'iShares Mortgage Real Estate ETF',
+    assetType: 'US Mortgage REITs',
+    market: 'United States',
+    role: 'Offensive',
+  },
+  VWO: {
+    name: 'Vanguard FTSE Emerging Markets ETF',
+    assetType: 'Emerging Markets Equity',
+    market: 'Global Emerging Markets',
+    role: 'Signal',
+  },
+  BND: {
+    name: 'Vanguard Total Bond Market ETF',
+    assetType: 'US Core Bonds',
+    market: 'United States',
+    role: 'Signal',
+  },
 };
 
 export const getTickerMetadata = (ticker) => {
