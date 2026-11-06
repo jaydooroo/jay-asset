@@ -62,3 +62,6 @@ venv/
 
 # Playwright MCP screenshots and logs
 .playwright-mcp/
+
+# Research backtest price cache and output (backend/research/mix_backtest.py)
+.research/
