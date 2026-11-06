@@ -2,3 +2,4 @@
 #   pip install -r requirements-dev.txt
 -r requirements.txt
 boto3==1.34.34
+pytest==9.2.0

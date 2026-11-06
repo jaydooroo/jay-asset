@@ -10,6 +10,11 @@ from market import get_price_repository
 from .config import performance_backtest_months, performance_lookback_days
 
 
+def _utcnow() -> datetime:
+    """Current UTC time (naive). Tests replace this to pin the backtest date."""
+    return datetime.utcnow()
+
+
 def _clean_weights(weights: dict) -> dict:
     cleaned = {}
     for ticker, weight in (weights or {}).items():
@@ -50,7 +55,7 @@ def _monthly_prices(prices: pd.DataFrame) -> pd.DataFrame:
         return prices
 
     monthly = prices.groupby(prices.index.to_period("M")).tail(1)
-    current_month = pd.Timestamp.utcnow().tz_localize(None).to_period("M")
+    current_month = pd.Timestamp(_utcnow()).to_period("M")
     monthly = monthly[monthly.index.to_period("M") < current_month]
     return monthly.dropna(how="all")
 
@@ -79,7 +84,7 @@ def run_monthly_walkforward_backtest(spec, parameters: dict | None = None) -> di
     # rebalance point a few trading days short of its lookback.
     fetch_days = int(min_lookback_days * 365 / 252) + (months + 3) * 31 + 45
 
-    end_date = datetime.utcnow()
+    end_date = _utcnow()
     start_date = end_date - timedelta(days=fetch_days)
     price_repository = get_price_repository()
     prices, failed = price_repository.get_close_prices(universe, start_date, end_date)

@@ -31,6 +31,28 @@ or at DynamoDB Local (see [docs/dynamodb-local.md](../docs/dynamodb-local.md)).
 
 The backend will run on `http://localhost:5000`
 
+## Tests
+
+```powershell
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
+
+Tests need no AWS access or API keys. Strategies read prices from an
+in-memory `FakePriceRepository` (`tests/helpers.py`) built from made-up
+price paths, so each test states the market it assumes and the decision it
+expects. What each file covers:
+
+- `test_gem_gtaa_laa.py`, `test_momentum_strategies.py`, `test_static_allocation.py`: each strategy's rules.
+- `test_strategy_contracts.py`: every registered strategy returns a valid portfolio, matches its backtest spec, and is wired into ingest tickers and frontend text.
+- `test_backtest.py`: the walk-forward engine (returns, no look-ahead, any day of the month) and the performance runner.
+- `test_api.py`, `test_lambda_handler.py`, `test_cache_and_money.py`, `test_market.py`: endpoints, Lambda events, cache keys, DynamoDB/Tiingo/ingest.
+
+Tests marked `xfail` record known bugs; once fixed they fail with "XPASS" and
+the marker should be removed. GitHub Actions runs these and the frontend
+tests (`npm test`) on every push.
+
 ## Deployment
 
 The backend is deployed with AWS SAM (`template.yaml` at the project root):

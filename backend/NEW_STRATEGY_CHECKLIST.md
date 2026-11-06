@@ -80,13 +80,18 @@ strategy, performance spec and cache-key handling come with it. Only steps 6
 
 ## 9) Verification before merge
 
-1. Smoke test:
+1. Run the tests (`cd backend && pytest`, `CI=true npm test`). The contract
+   tests in `backend/tests/test_strategy_contracts.py` pick up a new strategy
+   automatically and fail if steps 2, 4 or 6 or ticker ingestion were missed,
+   or if the live plan and the backtest spec disagree. Add rule tests for the
+   new strategy's decisions next to the existing ones.
+2. Smoke test:
    - `GET /api/strategies`
    - `POST /api/calculate` with default params
    - `GET /api/performance?strategy_id=<id>`
-2. Confirm cache behavior:
+3. Confirm cache behavior:
    - second identical request should return cached plan path.
-3. Confirm UI:
+4. Confirm UI:
    - strategy visible
    - parameter form renders
    - results + education copy display in EN/KO
