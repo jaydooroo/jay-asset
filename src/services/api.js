@@ -61,14 +61,12 @@ class ApiService {
   /**
    * Get cached monthly walk-forward performance metrics for a strategy
    * @param {string} strategyId - Strategy identifier
-   * @param {boolean} refresh - Force recompute before reading cache
    */
-  async getPerformance(strategyId, refresh = false) {
+  async getPerformance(strategyId) {
     try {
       const qs = new URLSearchParams({
         strategy_id: String(strategyId || ''),
       });
-      if (refresh) qs.set('refresh', 'true');
 
       const response = await fetch(`${API_BASE_URL}/performance?${qs.toString()}`);
       const data = await response.json();

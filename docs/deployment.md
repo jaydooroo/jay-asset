@@ -16,7 +16,8 @@ asset.jehyeonlee.net (Amplify 앱: jay-asset)
 Lambda Function URL ── Lambda (SAM 스택 jay-asset, 논리 이름 ApiFunction)
                           │  lambda_handler.handler
                           ├─ API 요청 (/api/*)        → Flask app.py
-                          ├─ {"job": "market_data_ingest"}  ← 평일 21:00 (뉴욕) 스케줄
+                          ├─ {"job": "market_data_ingest"}  ← 평일 21:00 (뉴욕, 최근 14일)
+                          │                                   + 매월 1일 07:00 (뉴욕, 최근 1,100일)
                           └─ {"job": "performance_refresh"} ← 매월 1일 08:00 (뉴욕) 스케줄
                           ▼
 DynamoDB: jay-asset-daily-prices / jay-asset-performance / jay-asset-cache
@@ -106,6 +107,21 @@ aws cloudformation describe-stacks --stack-name jay-asset --query "Stacks[0].Out
 **작업 수동 실행** (위 backfill과 같은 방식으로 payload만 바꿉니다)
 - 성과 다시 계산: `{"job":"performance_refresh"}`
 - 최근 시세 수집: `{"job":"market_data_ingest","lookback_days":14}`
+
+작업이 실패하면 `out.json`에 `"ok"` 대신 `errorMessage`가 들어 있습니다.
+
+**실패 알림**
+- 예약 작업이 실패하면 CloudWatch 알람 `FunctionErrorAlarm`이 울립니다. 가격을 못 받은 티커가 있거나, 어떤 티커의 최신 가격이 5일보다 오래된 경우도 실패로 칩니다.
+- 이메일로 받으려면 `backend\.env.aws.local`에 `ALERT_EMAIL=주소`를 넣고 배포한 뒤, AWS가 보낸 구독 확인 메일에서 **Confirm subscription**을 눌러야 합니다.
+- 실패한 작업은 자동으로 다시 실행하지 않습니다. 일일 수집은 다음 실행이 빈 날짜를 채우고, 월간 작업은 위 방법으로 직접 다시 실행합니다.
+
+**수정주가 갱신**
+- 배당이 나오면 Tiingo의 과거 수정주가가 전부 바뀌므로, 매월 1일 07:00에 최근 1,100일을 다시 받습니다. 08:00 성과 계산이 고쳐진 가격을 쓰도록 먼저 실행합니다.
+
+**배포 스크립트가 하는 일**
+- 백엔드 테스트가 실패하면 배포를 멈춥니다.
+- `sam build`는 `backend/` 전체를 복사하므로, 빌드 후 패키지에서 `.env*`, 테스트, 연구용 코드를 지웁니다.
+- 배포 없이 여기까지만 확인하려면 `.\scripts\deploy-backend.ps1 -BuildOnly`를 실행합니다.
 
 **로그 보기**
 ```powershell

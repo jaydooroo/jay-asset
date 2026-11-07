@@ -77,6 +77,20 @@ def _normalize_lambda_response(response: dict) -> dict:
     return response
 
 
+def _job_response(summary: dict) -> dict:
+    """
+    Lambda counts only exceptions as errors, so a failed job must raise for the
+    alarm in template.yaml to fire.
+    """
+    if not summary.get("ok"):
+        raise RuntimeError(f"Job failed: {json.dumps(summary)}")
+    return {
+        "statusCode": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps(summary),
+    }
+
+
 def handler(event, context):
     """AWS Lambda handler that translates API Gateway events to Flask"""
     if isinstance(event, dict) and event.get("job") == "market_data_ingest":
@@ -86,20 +100,11 @@ def handler(event, context):
             tickers=event.get("tickers"),
             lookback_days=int(event.get("lookback_days", 7)),
         )
-        return {
-            "statusCode": 200 if summary.get("ok") else 500,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps(summary),
-        }
+        return _job_response(summary)
 
     if isinstance(event, dict) and (
         event.get("job") == "performance_refresh"
         or event.get("source") in {"aws.events", "aws.scheduler"}
     ):
-        summary = run_monthly_performance_refresh()
-        return {
-            "statusCode": 200,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps(summary),
-        }
+        return _job_response(run_monthly_performance_refresh())
     return _normalize_lambda_response(awsgi.response(app, _normalize_event(event), context))

@@ -205,28 +205,53 @@ def ingest_env(monkeypatch):
     return install
 
 
+def _days_ago(days):
+    return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+
+
 class TestIngest:
     def test_writes_one_item_per_ticker_and_day(self, ingest_env):
-        prices = pd.DataFrame({"SPY": [100.25, 101.0], "IWD": [50.0, None]},
-                              index=pd.to_datetime(["2026-10-29", "2026-10-30"]))
-        table, calls = ingest_env(prices, failed=["VBR"])
+        earlier, latest = _days_ago(2), _days_ago(1)
+        prices = pd.DataFrame({"SPY": [100.25, 101.0], "IWD": [50.0, 51.0]},
+                              index=pd.to_datetime([earlier, latest]))
+        prices.loc[latest, "IWD"] = None
+        table, calls = ingest_env(prices)
 
-        summary = ingest.run_dynamodb_price_ingest(["spy", "IWD", "vbr", "SPY"], lookback_days=14)
+        summary = ingest.run_dynamodb_price_ingest(["spy", "IWD", "SPY"], lookback_days=14)
 
         assert summary["ok"] is True
-        assert summary["tickers"] == ["IWD", "SPY", "VBR"]
+        assert summary["tickers"] == ["IWD", "SPY"]
         assert summary["rows_written"] == 3
-        assert summary["missing_tickers"] == ["VBR"]
+        assert summary["missing_tickers"] == []
+        assert summary["stale_tickers"] == []
         assert {(i["ticker"], i["price_date"], i["close"]) for i in table.items} == {
-            ("SPY", "2026-10-29", Decimal("100.25")),
-            ("SPY", "2026-10-30", Decimal("101.0")),
-            ("IWD", "2026-10-29", Decimal("50.0")),
+            ("SPY", earlier, Decimal("100.25")),
+            ("SPY", latest, Decimal("101.0")),
+            ("IWD", earlier, Decimal("50.0")),
         }
         assert all(i["source"] == "tiingo" for i in table.items)
 
         _, start, end = calls[0]
         assert end - start == timedelta(days=14)
         assert abs(end - datetime.now(timezone.utc)) < timedelta(minutes=1)
+
+    def test_missing_ticker_fails_the_job_but_keeps_the_other_rows(self, ingest_env):
+        prices = pd.DataFrame({"SPY": [101.0]}, index=pd.to_datetime([_days_ago(1)]))
+        table, _ = ingest_env(prices, failed=["VBR"])
+        summary = ingest.run_dynamodb_price_ingest(["SPY", "VBR"])
+        assert summary["ok"] is False
+        assert summary["missing_tickers"] == ["VBR"]
+        assert [i["ticker"] for i in table.items] == ["SPY"]
+
+    @pytest.mark.parametrize("age, stale", [(ingest.STALE_AFTER_DAYS - 1, []), (ingest.STALE_AFTER_DAYS + 1, ["IWD"])])
+    def test_ticker_that_stopped_updating_fails_the_job(self, ingest_env, age, stale):
+        # Tiingo answers normally, so only the dates reveal the problem.
+        prices = pd.DataFrame({"SPY": [100.0, 101.0], "IWD": [50.0, None]},
+                              index=pd.to_datetime([_days_ago(age), _days_ago(0)]))
+        ingest_env(prices)
+        summary = ingest.run_dynamodb_price_ingest(["SPY", "IWD"])
+        assert summary["stale_tickers"] == stale
+        assert summary["ok"] is (not stale)
 
     def test_uses_configured_tickers_by_default(self, ingest_env, monkeypatch):
         monkeypatch.setenv("MARKET_INGEST_TICKERS", "spy, agg")

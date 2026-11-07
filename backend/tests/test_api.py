@@ -102,11 +102,12 @@ class TestPerformance:
         assert body["success"] is True
         assert body["performance"]["metrics"]["months_tested"] == 12
 
-    def test_refresh_recomputes_even_when_stored(self, client, use_prices, monkeypatch):
-        monkeypatch.setattr(app_module, "performance_get_metrics", lambda sid: {"stale": True})
-        use_prices(make_prices({"SPY": 0.001, "AGG": 0.0002}, days=800))
+    def test_callers_cannot_force_a_recompute(self, client, monkeypatch):
+        # The API is public, and a recompute costs a full backtest.
+        monkeypatch.setattr(app_module, "performance_get_metrics", lambda sid: {"stored": True})
+        monkeypatch.setattr(app_module, "compute_and_store_for_strategy", lambda sid: pytest.fail("recomputed"))
         body = client.get("/api/performance?strategy_id=sixty_forty&refresh=1").get_json()
-        assert "stale" not in body["performance"]
+        assert body["performance"] == {"stored": True}
 
     def test_backtest_failure_is_reported(self, client, use_prices):
         use_prices(make_prices({"OTHER": 0.001}, days=800))

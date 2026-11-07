@@ -96,7 +96,6 @@ Get monthly walk-forward performance metrics (precomputed/cached).
 
 - Query params:
   - `strategy_id` (required)
-  - `refresh` (optional: `true|1`) to force immediate recompute
 
 ## Optional DynamoDB Cache (Lambda)
 
@@ -137,6 +136,7 @@ Table requirements:
 Lambda schedule:
 - `backend/lambda_handler.py` handles EventBridge schedule events (`aws.events` / `aws.scheduler`)
 - Scheduled invocation runs monthly refresh for all registered strategy specs.
+- To recompute by hand, invoke the Lambda with `{"job":"performance_refresh"}` (see `docs/deployment.md`).
 
 Adding strategies:
 - Add a new strategy spec under `backend/performance/specs/`

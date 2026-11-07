@@ -29,6 +29,13 @@ Parameters:
     Description: Set DISABLED to pause the ingest/refresh schedules.
     AllowedValues: [ENABLED, DISABLED]
     Default: ENABLED
+  AlertEmail:
+    Type: String
+    Default: ""
+    Description: Address that receives job failure alerts. Empty sends no email.
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
 
 Globals:
   Function:
@@ -43,6 +50,10 @@ Resources:
     Properties:
       CodeUri: backend/
       Handler: lambda_handler.handler
+      # A failed daily ingest is filled in by the next run, and retrying a full
+      # job right away would spend Tiingo requests without helping.
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
       Environment:
         Variables:
           MARKET_PRICE_TABLE: !Ref PriceTableName
@@ -85,6 +96,16 @@ Resources:
             ScheduleExpressionTimezone: America/New_York
             State: !Ref SchedulesState
             Input: '{"job": "market_data_ingest", "lookback_days": 14}'
+        # Tiingo rewrites all earlier adjusted closes after each dividend, so
+        # the whole stored window is re-read once a month. This runs before the
+        # performance refresh so the backtest sees corrected prices.
+        MonthlyPriceRefresh:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 7 1 * ? *)
+            ScheduleExpressionTimezone: America/New_York
+            State: !Ref SchedulesState
+            Input: '{"job": "market_data_ingest", "lookback_days": 1100}'
         # 1st of each month 08:00 New York time.
         MonthlyPerformanceRefresh:
           Type: ScheduleV2
@@ -99,6 +120,37 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${ApiFunction}
       RetentionInDays: 30
+
+  AlertTopic:
+    Type: AWS::SNS::Topic
+
+  AlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlertEmail
+    Properties:
+      TopicArn: !Ref AlertTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  # Scheduled jobs raise when they fail (see lambda_handler.py), which is what
+  # this metric counts. Flask turns API errors into HTTP responses instead.
+  FunctionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: A jay-asset job failed. Check the Lambda logs.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
 
 Outputs:
   ApiBaseUrl:

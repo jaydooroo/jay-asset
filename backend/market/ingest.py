@@ -8,6 +8,9 @@ from .config import ingest_tickers, price_table_name
 from .dynamodb_client import dynamodb_resource
 from .providers import TiingoPriceRepository
 
+# Longer than any market closure a weekday run normally sees.
+STALE_AFTER_DAYS = 5
+
 
 def _log(message: str) -> None:
     print(f"[market-ingest] {message}", flush=True)
@@ -15,6 +18,11 @@ def _log(message: str) -> None:
 
 def _normalize_tickers(tickers: Iterable[str]) -> list[str]:
     return sorted(dict.fromkeys(str(ticker).strip().upper() for ticker in tickers if str(ticker).strip()))
+
+
+def _stale_tickers(prices, now: datetime) -> list[str]:
+    cutoff = now.replace(tzinfo=None) - timedelta(days=STALE_AFTER_DAYS)
+    return sorted(str(ticker) for ticker in prices.columns if prices[ticker].last_valid_index() < cutoff)
 
 
 def run_dynamodb_price_ingest(tickers: Iterable[str] | None = None, lookback_days: int = 7) -> dict:
@@ -85,11 +93,16 @@ def run_dynamodb_price_ingest(tickers: Iterable[str] | None = None, lookback_day
 
     _log(f"Finished DynamoDB write rows_written={written}")
 
+    # Rows that did arrive stay written, but the job reports the gap.
+    missing = sorted(set(failed))
+    stale = _stale_tickers(prices, end_date)
+
     return {
-        "ok": True,
+        "ok": not missing and not stale,
         "table": price_table_name(),
         "provider": provider_name,
         "tickers": selected_tickers,
         "rows_written": written,
-        "missing_tickers": sorted(set(failed)),
+        "missing_tickers": missing,
+        "stale_tickers": stale,
     }

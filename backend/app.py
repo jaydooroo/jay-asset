@@ -142,7 +142,6 @@ def get_performance():
 
     Query params:
       - strategy_id (required): e.g. 'paa'
-      - refresh (optional): '1'/'true' to force recompute now
     """
     strategy_id = (request.args.get('strategy_id') or '').strip()
     if not strategy_id:
@@ -157,23 +156,11 @@ def get_performance():
             'error': f'Strategy {strategy_id} not found'
         }), 404
 
-    # With PERFORMANCE_ENABLED=false (local runs) nothing is stored, so the
-    # freshly computed payload is returned directly instead of re-read.
-    payload = None
-    refresh = (request.args.get('refresh') or '').strip().lower() in {'1', 'true', 'yes'}
-    if refresh:
-        result = compute_and_store_for_strategy(strategy_id)
-        if not result.get('ok'):
-            return jsonify({
-                'success': False,
-                'error': result.get('error', 'Failed to compute performance metrics')
-            }), 500
-        if result.get('persisted') is False:
-            payload = result.get('payload')
-
-    payload = payload or performance_get_metrics(strategy_id)
+    payload = performance_get_metrics(strategy_id)
     if not payload:
-        # Best-effort warmup for first run / empty table
+        # Best-effort warmup for first run / empty table. With
+        # PERFORMANCE_ENABLED=false (local runs) nothing is stored, so the
+        # freshly computed payload is returned directly instead of re-read.
         result = compute_and_store_for_strategy(strategy_id)
         if not result.get('ok'):
             return jsonify({
