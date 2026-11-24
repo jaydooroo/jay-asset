@@ -74,24 +74,26 @@ class DynamoDBPriceRepository(PriceRepository):
                     break
                 kwargs["ExclusiveStartKey"] = last_key
 
-            rows = []
+            dates, closes = [], []
             for item in items:
                 close = _to_float(item.get("close"))
                 price_date = item.get("price_date")
                 if close is None or not price_date:
                     continue
-                rows.append((pd.to_datetime(price_date), close))
+                dates.append(price_date)
+                closes.append(close)
 
-            if not rows:
+            if not closes:
                 failed.append(ticker)
                 continue
 
-            rows.sort(key=lambda row: row[0])
+            # One to_datetime call per ticker: parsing row by row took most of
+            # a plan's time (about 2 s for PAA's 3,400 rows on Lambda).
             series_by_ticker[ticker] = pd.Series(
-                [close for _, close in rows],
-                index=[date for date, _ in rows],
+                closes,
+                index=pd.to_datetime(dates, format="%Y-%m-%d"),
                 name=ticker,
-            )
+            ).sort_index()
 
         if not series_by_ticker:
             return pd.DataFrame(), failed
