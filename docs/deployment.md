@@ -16,6 +16,7 @@ asset.jehyeonlee.net (Amplify 앱: jay-asset)
 Lambda Function URL ── Lambda (SAM 스택 jay-asset, 논리 이름 ApiFunction)
                           │  lambda_handler.handler
                           ├─ API 요청 (/api/*)        → Flask app.py
+                          ├─ {"job": "warmup"}        ← 5분마다 (서버를 깨워 둠)
                           ├─ {"job": "market_data_ingest"}  ← 평일 21:00 (뉴욕, 최근 14일)
                           │                                   + 매월 1일 07:00 (뉴욕, 최근 1,100일)
                           └─ {"job": "performance_refresh"} ← 매월 1일 08:00 (뉴욕) 스케줄

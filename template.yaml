@@ -87,6 +87,14 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref CacheTableName
       Events:
+        # Visitors are rare, so an idle Lambda would shut down and make the
+        # next visitor wait about 3 s for it to start again.
+        KeepWarm:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(5 minutes)
+            State: !Ref SchedulesState
+            Input: '{"job": "warmup"}'
         # Weekdays 21:00 New York time, after US market close. The job re-reads
         # the last 14 days, so a missed run is filled in by the next one.
         DailyMarketIngest:

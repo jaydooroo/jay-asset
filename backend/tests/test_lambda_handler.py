@@ -42,6 +42,12 @@ def test_http_request_reaches_flask():
     assert "sixty_forty" in json.loads(response["body"])["strategies"]
 
 
+def test_warmup_does_no_work(monkeypatch):
+    monkeypatch.setattr(lambda_handler, "run_monthly_performance_refresh", lambda: pytest.fail("ran a job"))
+    monkeypatch.setattr(lambda_handler.awsgi, "response", lambda *a: pytest.fail("reached Flask"))
+    assert handler({"job": "warmup", "source": "aws.scheduler"}, None)["statusCode"] == 200
+
+
 def test_ingest_job(monkeypatch):
     calls = []
     monkeypatch.setattr(ingest, "run_dynamodb_price_ingest",

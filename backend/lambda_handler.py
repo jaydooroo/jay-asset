@@ -93,6 +93,11 @@ def _job_response(summary: dict) -> dict:
 
 def handler(event, context):
     """AWS Lambda handler that translates API Gateway events to Flask"""
+    if isinstance(event, dict) and event.get("job") == "warmup":
+        # Importing this module already loaded Flask and pandas; that start-up
+        # (about 3 s) is what the schedule keeps first visitors from waiting on.
+        return {"statusCode": 200, "body": "warm"}
+
     if isinstance(event, dict) and event.get("job") == "market_data_ingest":
         from market.ingest import run_dynamodb_price_ingest
 
