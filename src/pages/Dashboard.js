@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -41,7 +41,8 @@ const Dashboard = () => {
   const { language, t } = useLanguage();
   const [dynamicStrategies, setDynamicStrategies] = useState({});
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
-  const [amount, setAmount] = useState('');
+  // Visitors see a result for this example amount without typing anything.
+  const [amount, setAmount] = useState('10000');
   const [paramValues, setParamValues] = useState({});
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [autoCalculatedFor, setAutoCalculatedFor] = useState(null);
 
   const [performanceByStrategy, setPerformanceByStrategy] = useState({});
   const [performanceLoading, setPerformanceLoading] = useState(false);
@@ -68,10 +70,9 @@ const Dashboard = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        await ApiService.healthCheck();
-        setBackendAvailable(true);
         const dynamic = await ApiService.getStrategies();
         setDynamicStrategies(dynamic);
+        setBackendAvailable(true);
       } catch {
         setBackendAvailable(false);
       }
@@ -186,7 +187,7 @@ const Dashboard = () => {
     setParamValues(buildDefaultParams(selectedStrategy));
   };
 
-  const handleCalculate = async () => {
+  const handleCalculate = useCallback(async () => {
     if (!selectedStrategyId || !amount || Number(amount) <= 0) {
       setError(t('dashboard.errorSelectAmount'));
       return;
@@ -265,7 +266,18 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [amount, paramValues, selectedStrategyId, strategies, t]);
+
+  // Calculate once per selected strategy without a click. It waits for the
+  // performance request because two requests at once would start a second,
+  // cold Lambda instance.
+  const performanceSettled = selectedStrategy?.type !== 'dynamic' || Boolean(selectedPerformance || performanceError);
+  useEffect(() => {
+    if (!selectedStrategyId || autoCalculatedFor === selectedStrategyId) return;
+    if (results || loading || !performanceSettled || !(Number(amount) > 0)) return;
+    setAutoCalculatedFor(selectedStrategyId);
+    handleCalculate();
+  }, [selectedStrategyId, autoCalculatedFor, results, loading, performanceSettled, amount, handleCalculate]);
 
   const donutData = useMemo(() => {
     if (!results?.breakdown) return [];
@@ -474,7 +486,7 @@ const Dashboard = () => {
 
           {!results && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {t('dashboard.runPrompt')}
+              {loading ? t('dashboard.calculating') : t('dashboard.runPrompt')}
             </Typography>
           )}
 
